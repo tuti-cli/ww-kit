@@ -34,6 +34,11 @@ Use this context when:
 - Planning file structure (follow project conventions)
 - **Follow architecture guidelines from `.ai-factory/ARCHITECTURE.md` when planning file structure and task organization**
 
+**OPTIONAL (recommended):** Read `.ai-factory/RESEARCH.md` if it exists:
+- Treat `## Active Summary (input for /aif-plan)` as an additional requirements source
+- Carry over constraints/decisions into tasks and plan settings
+- Prefer the summary over raw notes; use `## Sessions` only when you need deeper rationale
+
 ### Step 0.1: Ensure Git Repository
 
 ```bash
@@ -179,6 +184,7 @@ WORKTREE="../${DIRNAME}-<branch-name-with-hyphens>"
 # Project context
 cp .ai-factory/DESCRIPTION.md "${WORKTREE}/.ai-factory/DESCRIPTION.md" 2>/dev/null
 cp .ai-factory/ARCHITECTURE.md "${WORKTREE}/.ai-factory/ARCHITECTURE.md" 2>/dev/null
+cp .ai-factory/RESEARCH.md "${WORKTREE}/.ai-factory/RESEARCH.md" 2>/dev/null
 
 # Past lessons / patches
 cp -r .ai-factory/patches/ "${WORKTREE}/.ai-factory/patches/" 2>/dev/null
@@ -330,8 +336,13 @@ mkdir -p .ai-factory/plans  # only when saving to branch-named plan files
 - Title with feature name
 - Branch and creation date
 - `Settings` section (Testing, Logging, Docs)
+- `Research Context` section (optional, if `.ai-factory/RESEARCH.md` exists)
 - `Tasks` section grouped by phases
 - `Commit Plan` section when there are 5+ tasks
+
+If `.ai-factory/RESEARCH.md` exists:
+- Include `## Research Context` by copying only the `Active Summary` (do not paste full `Sessions`)
+- Keep it compact; it should be readable as a one-screen requirements snapshot
 
 Use the canonical template in `references/TASK-FORMAT.md` (Plan File Template).
 
