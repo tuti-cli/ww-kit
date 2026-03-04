@@ -131,7 +131,7 @@ AI Factory can generate and maintain your project docs with a single command:
 
 - **Generates docs from scratch** — analyzes your codebase and creates a lean README + detailed `docs/` pages by topic
 - **Cleans up scattered files** — finds loose CONTRIBUTING.md, ARCHITECTURE.md, SETUP.md in your root and consolidates them into a structured `docs/` directory
-- **Keeps docs in sync** — integrates with `/aif-implement` so documentation is updated automatically after each feature
+- **Keeps docs in sync** — integrates with `/aif-implement` docs policy (`Docs: yes` = mandatory docs checkpoint routed to `/aif-docs`, `Docs: no` = visible `WARN [docs]`)
 - **Builds a docs website** — `--web` generates a static HTML site with navigation and dark mode, ready to host
 
 ---

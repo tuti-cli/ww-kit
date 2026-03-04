@@ -186,6 +186,10 @@ Prompts for commits at checkpoints
     ↓
 Checks .ai-factory/ROADMAP.md → marks completed milestones
     ↓
+Docs policy:
+    - Docs: yes → mandatory docs checkpoint (update/create/skip) routed via /aif-docs
+    - Docs: no or unset → WARN [docs] only (no mandatory prompt)
+    ↓
 Offers to delete PLAN.md when done (keeps feature-*.md)
 
 /aif-fix <bug description>
