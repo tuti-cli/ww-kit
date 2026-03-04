@@ -11,7 +11,7 @@ Created: [date]
 ## Settings
 - Testing: yes/no
 - Logging: verbose/standard/minimal
-- Docs: yes/no
+- Docs: yes/no  # yes => mandatory docs checkpoint in /aif-implement, no/unset => WARN [docs] only
 
 ## Roadmap Linkage (optional)
 <!-- Only when .ai-factory/ROADMAP.md exists -->

@@ -51,7 +51,7 @@ Created: 2024-01-15
 ## Settings
 - Testing: no
 - Logging: verbose
-- Docs: yes          # /aif-implement will run /aif-docs after completion
+- Docs: yes          # /aif-implement shows mandatory docs checkpoint, then routes through /aif-docs
 
 ## Research Context (optional)
 Source: .ai-factory/RESEARCH.md (Active Summary)
