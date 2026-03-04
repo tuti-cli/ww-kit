@@ -2,7 +2,7 @@
 name: aif-plan
 description: Plan implementation for a feature or task. Two modes — fast (no branch) or full (git branch + plan). Use when user says "plan", "new feature", "start feature", "create tasks".
 argument-hint: "[fast | full] [--parallel | --list | --cleanup <branch>] <description>"
-allowed-tools: Read Write Glob Grep Bash(git *) Bash(cd *) Bash(cp *) Bash(mkdir *) Bash(basename *) TaskCreate TaskUpdate TaskList AskUserQuestion Questions Task
+allowed-tools: Read Write Glob Grep Bash(git *) Bash(cd *) Bash(cp *) Bash(mkdir *) Bash(basename *) TaskCreate TaskUpdate TaskList Questions Task
 disable-model-invocation: false
 ---
 
@@ -174,9 +174,9 @@ AskUserQuestion: Before we start, a few questions:
    - [ ] Standard - INFO level, key events only
    - [ ] Minimal - only WARN/ERROR
 
-3. Update documentation after implementation?
-   - [ ] Yes, update docs (/aif-docs)
-   - [ ] No, skip docs
+3. Documentation policy after implementation?
+   - [ ] Yes — mandatory docs checkpoint at completion (recommended)
+   - [ ] No — warn-only (`WARN [docs]`), no mandatory checkpoint
 
 4. Roadmap milestone linkage (only if `.ai-factory/ROADMAP.md` exists):
    - [ ] Link this plan to a milestone
@@ -191,6 +191,10 @@ AskUserQuestion: Before we start, a few questions:
 - Missing logs during development wastes debugging time
 
 Store all preferences — they will be used in the plan file and passed to `/aif-implement`.
+
+Docs policy semantics:
+- `Docs: yes` → `/aif-implement` MUST show a mandatory documentation checkpoint and route docs changes through `/aif-docs`
+- `Docs: no` (or unset) → `/aif-implement` emits `WARN [docs]` and continues without a mandatory docs checkpoint
 
 **If `.ai-factory/ROADMAP.md` exists and the user chose milestone linkage:**
 - Read `.ai-factory/ROADMAP.md` and list candidate milestones (prefer unchecked items)
@@ -425,7 +429,7 @@ CONTEXT FROM /aif-plan:
 - Plan file: .ai-factory/plans/<branch-name>.md
 - Testing: yes/no
 - Logging: verbose/standard/minimal
-- Docs: yes/no
+- Docs: yes/no  # yes => mandatory docs checkpoint, no => warn-only
 ```
 
 **Full mode normal:** STOP after planning. The user reviews the plan and decides when to implement.

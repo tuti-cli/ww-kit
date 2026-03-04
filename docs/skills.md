@@ -28,7 +28,7 @@ Plans implementation for a feature or task:
 
 Two modes:
 - **Fast** — no git branch, saves plan to `.ai-factory/PLAN.md`, asks fewer questions
-- **Full** — creates git branch (`feature/user-authentication`), asks about testing/logging/docs, saves plan to `.ai-factory/plans/<branch>.md`
+- **Full** — creates git branch (`feature/user-authentication`), asks about testing/logging/docs policy, saves plan to `.ai-factory/plans/<branch>.md`
 
 Both modes explore your codebase for patterns, create tasks with dependencies, and include commit checkpoints for 5+ tasks.
 
@@ -121,7 +121,10 @@ Executes the plan:
 - `--list` mode is read-only: shows available plan files and exits
 - Executes tasks one by one
 - Prompts for commits at checkpoints
-- If plan has `Docs: yes` — runs `/aif-docs` after completion
+- Docs policy after completion:
+  - `Docs: yes` → mandatory documentation checkpoint (update docs / create feature page / skip)
+  - `Docs: no` or unset → `WARN [docs]` only (no mandatory checkpoint)
+  - Docs updates are always routed through `/aif-docs`
 - Offers to delete .ai-factory/PLAN.md when done
 
 ### `/aif-verify [--strict]`
@@ -238,7 +241,7 @@ Generates and maintains project documentation:
 
 **Scattered .md cleanup** — finds loose markdown files in your project root (CONTRIBUTING.md, ARCHITECTURE.md, SETUP.md, DEPLOYMENT.md, etc.) and proposes consolidating them into a structured `docs/` directory. No more documentation scattered across 10 root-level files.
 
-**Stays in sync with your code** — when `/aif-plan full` asks "Update documentation?" and you say yes, the plan gets `Docs: yes`. After `/aif-implement` finishes all tasks, it automatically runs `/aif-docs` to update documentation. Your docs grow with your codebase, not after the fact.
+**Stays in sync with your code** — when `/aif-plan full` asks for docs policy and you choose `Docs: yes`, `/aif-implement` shows a mandatory docs checkpoint and routes changes through `/aif-docs`. If `Docs: no` (or unset), `/aif-implement` emits `WARN [docs]` so potential drift is visible without blocking the flow.
 
 **Documentation website** — `--web` flag generates a complete static HTML site in `docs-html/` with navigation bar, dark mode support, and clean typography. Ready to host on GitHub Pages or any static hosting.
 

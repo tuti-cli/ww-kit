@@ -2,7 +2,7 @@
 name: aif-implement
 description: Execute implementation tasks from the current plan. Works through tasks sequentially, marks completion, and preserves progress for continuation across sessions. Use when user says "implement", "start coding", "execute plan", or "continue implementation".
 argument-hint: '[--list] [@plan-file] [task-id or "status"]'
-allowed-tools: Read Write Edit Glob Grep Bash TaskList TaskGet TaskUpdate AskUserQuestion Questions
+allowed-tools: Read Write Edit Glob Grep Bash TaskList TaskGet TaskUpdate Questions
 disable-model-invocation: false
 ---
 
@@ -367,6 +367,7 @@ Files modified:
 - src/services/search.ts (created)
 - src/api/products/search.ts (created)
 - src/types/search.ts (created)
+Documentation: updated existing docs | created docs/<feature-slug>.md | skipped by user | warn-only (Docs: no/unset)
 
 What's next?
 
@@ -442,17 +443,35 @@ Options:
 If user chooses "Verify first" → suggest invoking `/aif-verify`.
 If user chooses "Skip to commit" → suggest invoking `/aif-commit`.
 
-**Check if documentation needs updating:**
+**Documentation policy checkpoint (after completion, before plan cleanup):**
 
-Read the plan file settings. If documentation preference is set to "yes" (from `/aif-plan full` questions), run `/aif-docs` to update documentation.
+Read the plan file setting `Docs: yes/no`.
 
-If documentation preference is "no" or not set — skip this step silently.
-
-If documentation preference is "yes":
+If plan setting is `Docs: yes`:
 ```
-📝 Updating project documentation...
+AskUserQuestion: Documentation checkpoint — how should we document this feature?
+
+Options:
+1. Update existing docs (recommended) — invoke /aif-docs
+2. Create a new feature doc page — invoke /aif-docs with feature-page context
+3. Skip documentation
 ```
-→ Invoke `/aif-docs` to analyze changes and update docs.
+
+Handling:
+- Option 1 → invoke `/aif-docs` to update README/docs based on completed work
+- Option 2 → invoke `/aif-docs` with context to create `docs/<feature-slug>.md`, include sections (Summary, Usage/user-facing behavior, Configuration, API/CLI changes, Examples, Troubleshooting, See Also), and add a README docs-table link
+- Option 3 → do not invoke `/aif-docs`; emit `WARN [docs] Documentation skipped by user`
+
+If plan setting is `Docs: no` or setting is unset:
+- Do **not** show a mandatory docs checkpoint prompt
+- Do **not** invoke `/aif-docs` automatically
+- Emit `WARN [docs] Docs policy is no/unset; skipping documentation checkpoint`
+
+**Always include documentation outcome in the final completion output:**
+- `Documentation: updated existing docs`
+- `Documentation: created docs/<feature-slug>.md`
+- `Documentation: skipped by user`
+- `Documentation: warn-only (Docs: no/unset)`
 
 **Handle plan file after completion:**
 

@@ -207,7 +207,7 @@ High-level project planning. Creates `.ai-factory/ROADMAP.md` — a strategic ch
 /aif-plan full --parallel Add Stripe checkout      # Parallel worktree
 ```
 
-Two modes — **fast** (no branch, saves to `.ai-factory/PLAN.md`) and **full** (creates git branch, asks about testing/logging/docs and optional roadmap milestone linkage when `.ai-factory/ROADMAP.md` exists, saves to `.ai-factory/plans/<branch>.md`). Analyzes requirements, explores codebase for patterns, creates tasks with dependencies. For 5+ tasks, includes commit checkpoints. For parallel work on multiple features, use `full --parallel` to create isolated worktrees.
+Two modes — **fast** (no branch, saves to `.ai-factory/PLAN.md`) and **full** (creates git branch, asks about testing/logging/docs policy and optional roadmap milestone linkage when `.ai-factory/ROADMAP.md` exists, saves to `.ai-factory/plans/<branch>.md`). Analyzes requirements, explores codebase for patterns, creates tasks with dependencies. For 5+ tasks, includes commit checkpoints. For parallel work on multiple features, use `full --parallel` to create isolated worktrees.
 
 ### `/aif-improve [--list] [@plan-file] [prompt]` — refine the plan
 
@@ -245,7 +245,7 @@ For full contracts and state transition rules, see [Reflex Loop](loop.md).
 /aif-implement status # Check progress
 ```
 
-Reads skill-context rules first, then uses limited recent patch fallback when needed. Executes tasks one by one with commit checkpoints. Plan source priority: `@plan-file` argument, then branch-based `.ai-factory/plans/<branch>.md`, then `.ai-factory/PLAN.md`, then `.ai-factory/FIX_PLAN.md` (redirects to `/aif-fix`). `--list` is a read-only discovery mode that shows available plan files and exits. If the plan has `Docs: yes`, runs `/aif-docs` after completion.
+Reads skill-context rules first, then uses limited recent patch fallback when needed. Executes tasks one by one with commit checkpoints. Plan source priority: `@plan-file` argument, then branch-based `.ai-factory/plans/<branch>.md`, then `.ai-factory/PLAN.md`, then `.ai-factory/FIX_PLAN.md` (redirects to `/aif-fix`). `--list` is a read-only discovery mode that shows available plan files and exits. Docs policy after completion: `Docs: yes` → mandatory docs checkpoint (update docs / create feature page / skip, routed via `/aif-docs`), `Docs: no` or unset → `WARN [docs]` only.
 
 ### `/aif-verify [--strict]` — check completeness
 
