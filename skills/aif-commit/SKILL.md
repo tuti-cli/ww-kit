@@ -109,15 +109,32 @@ When invoked:
 3. Run read-only context gates and summarize findings as `WARN`/`ERROR`
 4. If commit type is `feat`/`fix`/`perf` and roadmap exists, check milestone linkage; if missing, warn and suggest adding linkage in commit body/footer
 5. Propose a commit message
-6. Ask for confirmation or modifications
-7. Execute `git commit` with the message
+6. Confirm with the user before committing:
+
+   ```
+   AskUserQuestion: Proposed commit message:
+
+   <type>(<scope>): <subject>
+
+   Options:
+   1. Commit as is
+   2. Edit message
+   3. Cancel
+   ```
+
+7. Execute `git commit` with the confirmed message
 8. After a successful commit, offer to push:
    - Show branch/ahead status: `git status -sb`
    - If the branch has no upstream, use: `git push -u origin <branch>`
    - Otherwise: `git push`
-   - User choice:
-      - [ ] Push now
-      - [ ] Skip push
+
+   ```
+   AskUserQuestion: Push to remote?
+
+   Options:
+   1. Push now
+   2. Skip push
+   ```
 
 If argument provided (e.g., `/aif-commit auth`):
 - Use it as the scope
@@ -131,7 +148,17 @@ If argument provided (e.g., `/aif-commit auth`):
 - Treat `.ai-factory/ARCHITECTURE.md`, `.ai-factory/ROADMAP.md`, `.ai-factory/RULES.md`, and `.ai-factory/DESCRIPTION.md` as read-only context in this command
 - If staged changes contain unrelated work (e.g., a feature + a bugfix, or changes to independent modules), suggest splitting into separate commits:
   1. Show which files/hunks belong to which commit
-  2. Ask for confirmation
+  2. Confirm split plan with the user:
+
+     ```
+     AskUserQuestion: Split into separate commits?
+
+     Options:
+     1. Yes, split as suggested
+     2. No, commit everything together
+     3. Let me adjust the grouping
+     ```
+
   3. Unstage all: `git reset HEAD`
   4. Stage and commit each group separately using `git add <files>` + `git commit`
   5. Offer to push only after all commits are done
