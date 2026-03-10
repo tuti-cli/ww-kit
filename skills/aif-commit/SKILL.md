@@ -141,7 +141,9 @@ When invoked:
    2. Skip push
    ```
 
-   - **Push now** → execute `git push`
+   - **Push now** → execute push command based on upstream status:
+     - if branch has no upstream → `git push -u origin <branch>`
+     - otherwise → `git push`
    - **Skip push** → end the workflow
 
 If argument provided (e.g., `/aif-commit auth`):
@@ -169,7 +171,7 @@ If argument provided (e.g., `/aif-commit auth`):
 
   3. Handle user response:
      - **Yes, split as suggested** → proceed to step 4
-     - **No, commit everything together** → proceed to step 6 (propose single commit message)
+     - **No, commit everything together** → proceed to step 5 (propose single commit message)
      - **Let me adjust the grouping** → ask the user for the adjusted grouping via `AskUserQuestion`, then return to step 2 with the new plan
   4. Unstage all: `git reset HEAD`
   5. Stage and commit each group separately using `git add <files>` + `git commit`
