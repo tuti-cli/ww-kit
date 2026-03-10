@@ -4,7 +4,7 @@ import { copyDirectory, getSkillsDir, ensureDir, listDirectories, listFilesRecur
 import type { AgentInstallation, ManagedSkillState } from './config.js';
 import { getAgentConfig } from './agents.js';
 import { processSkillTemplates, buildTemplateVars, processTemplate } from './template.js';
-import { cleanupAgentSetup, getTransformer, extractFrontmatterName, replaceFrontmatterName } from './transformer.js';
+import { getTransformer, extractFrontmatterName, replaceFrontmatterName } from './transformer.js';
 
 const EXTENSION_INJECTION_BLOCK_PATTERN = /\n?<!-- aif-ext:[^:]+:[^:]+:[^:]+:start -->\n[\s\S]*?\n<!-- aif-ext:[^:]+:[^:]+:[^:]+:end -->\n?/g;
 
@@ -439,11 +439,7 @@ export async function updateSkills(
   const skillsToInstall = updatableBaseSkills.filter(skillName => shouldInstall.get(skillName)?.install === true);
 
   if (force && skillsToInstall.length > 0) {
-    if (agentInstallation.id === 'antigravity') {
-      await cleanupAgentSetup(agentInstallation.id, projectDir, agentInstallation.skillsDir);
-    } else {
-      await removeSkillsByName(projectDir, agentInstallation, skillsToInstall);
-    }
+    await removeSkillsByName(projectDir, agentInstallation, skillsToInstall);
   }
 
   const installedBaseSkills = skillsToInstall.length > 0
