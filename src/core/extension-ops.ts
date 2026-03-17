@@ -4,11 +4,12 @@ import {
   type ExtensionManifest,
   classifyExtensionSource,
   compareExtensionVersions,
-  getNpmVersionCheckResult,
-  parseGitSource,
+  commitExtensionInstall,
+  resolveExtensionVersion,
   resolveExtension,
   getExtensionsDir,
   loadExtensionManifest,
+  type ResolvedExtension,
 } from './extensions.js';
 import { installSkills, getAvailableSkills, installExtensionSkills, removeExtensionSkills } from './installer.js';
 import { applySingleExtensionInjections, stripAllExtensionInjections, stripInjectionsByExtensionName } from './injections.js';
@@ -27,6 +28,13 @@ export interface ExtensionAssetInstallResult {
   customSkillInstalls: Map<string, string[]>;
   injectionCount: number;
   configuredMcpServers: string[];
+}
+
+export interface CommitResolvedExtensionOptions {
+  config: AiFactoryConfig;
+  source: string;
+  resolved: ResolvedExtension;
+  log?: (level: 'info' | 'warn', message: string) => void;
 }
 
 /**
@@ -303,6 +311,78 @@ export async function installExtensionAssetsForAllAgents(
   };
 }
 
+export async function commitResolvedExtension(
+  projectDir: string,
+  options: CommitResolvedExtensionOptions,
+): Promise<{ manifest: ExtensionManifest; extensionDir: string; record: ExtensionRecord }> {
+  const { config, source, resolved } = options;
+  const log = options.log ?? (() => {});
+  const manifest = resolved.manifest;
+  const extensions = config.extensions ?? [];
+  const existIdx = extensions.findIndex(ext => ext.name === manifest.name);
+  const oldRecord = existIdx >= 0 ? { ...extensions[existIdx] } : null;
+  const oldManifest = existIdx >= 0
+    ? await loadExtensionManifest(path.join(getExtensionsDir(projectDir), manifest.name))
+    : null;
+
+  assertNoReplacementConflicts(extensions, manifest, manifest.name);
+
+  await commitExtensionInstall(projectDir, resolved);
+
+  if (existIdx >= 0) {
+    await removePreviousExtensionState(projectDir, config.agents, manifest.name, oldRecord, oldManifest);
+  }
+
+  const extensionDir = path.join(getExtensionsDir(projectDir), manifest.name);
+  const assetInstall = await installExtensionAssetsForAllAgents(projectDir, config.agents, extensionDir, manifest);
+
+  for (const outcome of assetInstall.replacementOutcomes) {
+    if (outcome.status === 'installed') {
+      log('info', `Replaced skill "${outcome.baseSkillName}" with "${path.basename(outcome.extensionSkillPath)}"`);
+    } else if (outcome.status === 'rolled-back') {
+      log('warn', `Replacement "${outcome.baseSkillName}" only installed on ${outcome.successCount}/${outcome.agentCount} agents - rolled back, base skill restored`);
+    } else {
+      log('warn', `Failed to replace skill "${outcome.baseSkillName}" - base skill preserved`);
+    }
+  }
+
+  for (const [agentId, installed] of assetInstall.customSkillInstalls) {
+    if (installed.length > 0) {
+      log('info', `Skills installed for ${agentId}: ${installed.join(', ')}`);
+    }
+  }
+
+  if (assetInstall.injectionCount > 0) {
+    log('info', `Applied ${assetInstall.injectionCount} injection(s)`);
+  }
+
+  if (assetInstall.configuredMcpServers.length > 0) {
+    log('info', `MCP servers configured: ${assetInstall.configuredMcpServers.join(', ')}`);
+    for (const srv of manifest.mcpServers ?? []) {
+      if (srv.instruction) {
+        log('info', `  ${srv.instruction}`);
+      }
+    }
+  }
+
+  const record: ExtensionRecord = {
+    name: manifest.name,
+    source,
+    version: manifest.version,
+    replacedSkills: assetInstall.replacedSkills.length > 0 ? assetInstall.replacedSkills : undefined,
+  };
+
+  if (existIdx >= 0) {
+    extensions[existIdx] = record;
+  } else {
+    extensions.push(record);
+  }
+
+  config.extensions = extensions;
+
+  return { manifest, extensionDir, record };
+}
+
 export interface ExtensionRefreshResult {
   name: string;
   status: 'updated' | 'unchanged' | 'failed' | 'skipped';
@@ -319,6 +399,7 @@ export interface ExtensionRefreshSummary {
 }
 
 async function checkExtensionNeedsRefresh(
+  projectDir: string,
   source: string,
   currentVersion: string,
   force: boolean,
@@ -329,63 +410,25 @@ async function checkExtensionNeedsRefresh(
     return { shouldRefresh: true, latestVersion: null, reason: 'force' };
   }
 
-  if (sourceType === 'npm') {
-    const packageName = source.replace(/^npm:/, '');
-    const check = await getNpmVersionCheckResult(packageName, currentVersion, false);
+  if (sourceType === 'local') {
+    return { shouldRefresh: false, latestVersion: null, reason: 'source-type-requires-force' };
+  }
+
+  const resolution = await resolveExtensionVersion(projectDir, source);
+  if (resolution.status === 'failed' || !resolution.latestVersion) {
     return {
-      shouldRefresh: check.shouldDownload,
-      latestVersion: check.latestVersion,
-      reason: check.reason,
+      shouldRefresh: false,
+      latestVersion: null,
+      reason: 'lookup-failed',
     };
   }
 
-  if (sourceType === 'github') {
-    const gitSource = parseGitSource(source);
-    if (gitSource.isGitHub && gitSource.owner && gitSource.repo) {
-      const token = process.env.GITHUB_TOKEN?.trim();
-      const contentsUrl = new URL(
-        `https://api.github.com/repos/${gitSource.owner}/${gitSource.repo}/contents/extension.json`,
-      );
-      if (gitSource.ref) {
-        contentsUrl.searchParams.set('ref', gitSource.ref);
-      }
-
-      try {
-        const response = await fetch(contentsUrl.toString(), {
-          headers: {
-            Accept: 'application/vnd.github+json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          signal: AbortSignal.timeout(5000),
-        });
-
-        if (response.status === 403 && response.headers.get('x-ratelimit-remaining') === '0') {
-          return { shouldRefresh: false, latestVersion: null, reason: 'rate-limited' };
-        }
-
-        if (response.ok) {
-          const payload = (await response.json()) as { content?: string; encoding?: string };
-          if (payload.encoding === 'base64' && payload.content) {
-            const manifest = JSON.parse(
-              Buffer.from(payload.content.replace(/\n/g, ''), 'base64').toString('utf8'),
-            ) as ExtensionManifest;
-            if (manifest.version) {
-              const needsUpdate = compareExtensionVersions(manifest.version, currentVersion) > 0;
-              return {
-                shouldRefresh: needsUpdate,
-                latestVersion: manifest.version,
-                reason: needsUpdate ? 'version-changed' : 'unchanged',
-              };
-            }
-          }
-        }
-      } catch {
-        return { shouldRefresh: false, latestVersion: null, reason: 'github-api-failed' };
-      }
-    }
-  }
-
-  return { shouldRefresh: false, latestVersion: null, reason: 'source-type-requires-force' };
+  const needsUpdate = compareExtensionVersions(resolution.latestVersion, currentVersion) > 0;
+  return {
+    shouldRefresh: needsUpdate,
+    latestVersion: resolution.latestVersion,
+    reason: needsUpdate ? 'version-changed' : 'unchanged',
+  };
 }
 
 export async function refreshExtensions(
@@ -410,13 +453,24 @@ export async function refreshExtensions(
     : extensions;
 
   const results: ExtensionRefreshResult[] = [];
+  const hasGitHubSource = targetExtensions.some(ext => classifyExtensionSource(ext.source) === 'github');
+
+  if (hasGitHubSource) {
+    const hasToken = Boolean(process.env.GITHUB_TOKEN?.trim());
+    log(
+      'info',
+      hasToken
+        ? 'GitHub extension checks: authenticated via GITHUB_TOKEN'
+        : 'GitHub extension checks: unauthenticated; set GITHUB_TOKEN to raise rate limits',
+    );
+  }
 
   for (const extRecord of targetExtensions) {
     const { name: extName, source, version: currentVersion } = extRecord;
 
     log('info', `Checking ${extName} (v${currentVersion})...`);
 
-    const check = await checkExtensionNeedsRefresh(source, currentVersion, force);
+    const check = await checkExtensionNeedsRefresh(projectDir, source, currentVersion, force);
 
     if (!check.shouldRefresh) {
       const status: ExtensionRefreshResult['status'] =
@@ -437,45 +491,12 @@ export async function refreshExtensions(
       const resolved = await resolveExtension(projectDir, source);
 
       try {
-        const manifest = resolved.manifest;
-        const extensionsList = config.extensions ?? [];
-        const existIdx = extensionsList.findIndex((ext) => ext.name === extName);
-        const oldRecord = existIdx >= 0 ? { ...extensionsList[existIdx] } : null;
-        const oldManifest = existIdx >= 0
-          ? await loadExtensionManifest(path.join(getExtensionsDir(projectDir), extName))
-          : null;
-
-        assertNoReplacementConflicts(extensionsList, manifest, extName);
-
-        const { commitExtensionInstall } = await import('./extensions.js');
-        await commitExtensionInstall(projectDir, resolved);
-
-        if (existIdx >= 0) {
-          await removePreviousExtensionState(projectDir, config.agents, extName, oldRecord, oldManifest);
-        }
-
-        const extensionDir = path.join(getExtensionsDir(projectDir), manifest.name);
-        const assetInstall = await installExtensionAssetsForAllAgents(
-          projectDir,
-          config.agents,
-          extensionDir,
-          manifest,
-        );
-
-        const record: ExtensionRecord = {
-          name: manifest.name,
+        const { manifest } = await commitResolvedExtension(projectDir, {
+          config,
           source,
-          version: manifest.version,
-          replacedSkills: assetInstall.replacedSkills.length > 0 ? assetInstall.replacedSkills : undefined,
-        };
-
-        if (existIdx >= 0) {
-          extensionsList[existIdx] = record;
-        } else {
-          extensionsList.push(record);
-        }
-
-        config.extensions = extensionsList;
+          resolved,
+          log,
+        });
 
         results.push({
           name: extName,

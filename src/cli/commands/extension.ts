@@ -1,118 +1,22 @@
 import chalk from 'chalk';
 import path from 'path';
-import { loadConfig, saveConfig, type AiFactoryConfig, type ExtensionRecord } from '../../core/config.js';
+import { loadConfig, saveConfig } from '../../core/config.js';
 import {
   resolveExtension,
-  commitExtensionInstall,
   removeExtensionFiles,
   getExtensionsDir,
   loadExtensionManifest,
-  type ExtensionManifest,
-  type ResolvedExtension,
 } from '../../core/extensions.js';
 import { removeExtensionMcpServers } from '../../core/mcp.js';
 import {
-  assertNoReplacementConflicts,
-  installExtensionAssetsForAllAgents,
   removeSkillsForAllAgents,
   collectReplacedSkills,
-  removePreviousExtensionState,
   restoreBaseSkills,
   stripInjectionsForAllAgents,
   removeCustomSkillsForAllAgents,
+  commitResolvedExtension,
   refreshExtensions,
 } from '../../core/extension-ops.js';
-
-interface CommitResolvedExtensionOptions {
-  config: AiFactoryConfig;
-  source: string;
-  resolved: ResolvedExtension;
-}
-
-async function commitResolvedExtension(
-  projectDir: string,
-  options: CommitResolvedExtensionOptions,
-): Promise<{ manifest: ExtensionManifest; extensionDir: string; record: ExtensionRecord }> {
-  const { config, source, resolved } = options;
-  const manifest = resolved.manifest;
-  const extensions = config.extensions ?? [];
-  const existIdx = extensions.findIndex(ext => ext.name === manifest.name);
-  const oldRecord = existIdx >= 0 ? { ...extensions[existIdx] } : null;
-  const oldManifest = existIdx >= 0
-    ? await loadExtensionManifest(path.join(getExtensionsDir(projectDir), manifest.name))
-    : null;
-
-  assertNoReplacementConflicts(extensions, manifest, manifest.name);
-
-  await commitExtensionInstall(projectDir, resolved);
-
-  if (existIdx >= 0) {
-    await removePreviousExtensionState(projectDir, config.agents, manifest.name, oldRecord, oldManifest);
-  }
-
-  console.log(chalk.green(`✓ Extension "${manifest.name}" v${manifest.version} installed`));
-
-  const extensionDir = path.join(getExtensionsDir(projectDir), manifest.name);
-  const assetInstall = await installExtensionAssetsForAllAgents(projectDir, config.agents, extensionDir, manifest);
-
-  for (const outcome of assetInstall.replacementOutcomes) {
-    if (outcome.status === 'installed') {
-      console.log(chalk.green(`✓ Replaced skill "${outcome.baseSkillName}" with "${path.basename(outcome.extensionSkillPath)}"`));
-    } else if (outcome.status === 'rolled-back') {
-      console.log(chalk.yellow(`⚠ Replacement "${outcome.baseSkillName}" only installed on ${outcome.successCount}/${outcome.agentCount} agents — rolled back, base skill restored`));
-    } else {
-      console.log(chalk.yellow(`⚠ Failed to replace skill "${outcome.baseSkillName}" — base skill preserved`));
-    }
-  }
-
-  for (const [agentId, installed] of assetInstall.customSkillInstalls) {
-    if (installed.length > 0) {
-      console.log(chalk.green(`✓ Skills installed for ${agentId}: ${installed.join(', ')}`));
-    }
-  }
-
-  if (assetInstall.injectionCount > 0) {
-    console.log(chalk.green(`✓ Applied ${assetInstall.injectionCount} injection(s)`));
-  }
-
-  if (assetInstall.configuredMcpServers.length > 0) {
-    console.log(chalk.green(`✓ MCP servers configured: ${assetInstall.configuredMcpServers.join(', ')}`));
-    for (const srv of manifest.mcpServers ?? []) {
-      if (srv.instruction) {
-        console.log(chalk.dim(`    ${srv.instruction}`));
-      }
-    }
-  }
-
-  const record: ExtensionRecord = {
-    name: manifest.name,
-    source,
-    version: manifest.version,
-    replacedSkills: assetInstall.replacedSkills.length > 0 ? assetInstall.replacedSkills : undefined,
-  };
-
-  if (existIdx >= 0) {
-    extensions[existIdx] = record;
-  } else {
-    extensions.push(record);
-  }
-
-  config.extensions = extensions;
-  await saveConfig(projectDir, config);
-
-  if (manifest.agents?.length) {
-    console.log(chalk.dim(`  Agents provided: ${manifest.agents.map(agent => agent.displayName).join(', ')}`));
-  }
-  if (manifest.commands?.length) {
-    console.log(chalk.dim(`  Commands provided: ${manifest.commands.map(command => command.name).join(', ')}`));
-  }
-  if (manifest.skills?.length) {
-    console.log(chalk.dim(`  Skills provided: ${manifest.skills.join(', ')}`));
-  }
-  console.log('');
-
-  return { manifest, extensionDir, record };
-}
 
 export async function extensionAddCommand(source: string): Promise<void> {
   const projectDir = process.cwd();
@@ -132,7 +36,31 @@ export async function extensionAddCommand(source: string): Promise<void> {
     const resolved = await resolveExtension(projectDir, source);
 
     try {
-      await commitResolvedExtension(projectDir, { config, source, resolved });
+      const { manifest } = await commitResolvedExtension(projectDir, {
+        config,
+        source,
+        resolved,
+        log: (level, message) => {
+          if (level === 'warn') {
+            console.log(chalk.yellow(`⚠ ${message}`));
+          } else {
+            console.log(chalk.green(`✓ ${message}`));
+          }
+        },
+      });
+      await saveConfig(projectDir, config);
+
+      console.log(chalk.green(`✓ Extension "${manifest.name}" v${manifest.version} installed`));
+      if (manifest.agents?.length) {
+        console.log(chalk.dim(`  Agents provided: ${manifest.agents.map(agent => agent.displayName).join(', ')}`));
+      }
+      if (manifest.commands?.length) {
+        console.log(chalk.dim(`  Commands provided: ${manifest.commands.map(command => command.name).join(', ')}`));
+      }
+      if (manifest.skills?.length) {
+        console.log(chalk.dim(`  Skills provided: ${manifest.skills.join(', ')}`));
+      }
+      console.log('');
     } finally {
       await resolved.cleanup();
     }
@@ -319,6 +247,8 @@ export async function extensionUpdateCommand(name?: string, options?: { force?: 
   for (const r of summary.skipped) {
     if (r.failureReason === 'rate-limited') {
       console.log(chalk.yellow(`  ⚠ ${r.name}: GitHub API rate limited, skipping`));
+    } else if (r.failureReason === 'lookup-failed') {
+      console.log(chalk.yellow(`  ⚠ ${r.name}: version check failed, retry or use --force`));
     } else if (r.failureReason === 'source-type-requires-force') {
       console.log(
         chalk.yellow(`  ⚠ ${r.name}: source type requires --force to refresh`),

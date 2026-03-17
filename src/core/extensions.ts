@@ -425,7 +425,7 @@ export function parseGitSource(source: string): ParsedGitSource {
   };
 }
 
-async function fetchGitHubExtensionManifest(source: string): Promise<ExtensionManifest | null> {
+export async function fetchGitHubExtensionManifest(source: string): Promise<ExtensionManifest | null> {
   const gitSource = parseGitSource(source);
 
   if (!gitSource.isGitHub || !gitSource.owner || !gitSource.repo) {
@@ -511,6 +511,112 @@ async function fetchGitHubExtensionManifest(source: string): Promise<ExtensionMa
       failureReason: (error as Error).message,
     });
     return null;
+  }
+}
+
+export async function resolveExtensionVersion(
+  projectDir: string,
+  source: string,
+): Promise<ExtensionVersionResolution> {
+  const sourceType = classifyExtensionSource(source);
+
+  logExtension('debug', 'Resolving extension version metadata', {
+    source,
+    sourceType,
+  });
+
+  try {
+    if (sourceType === 'local') {
+      const localPath = path.resolve(projectDir, source);
+      const manifest = await loadExtensionManifest(localPath);
+      if (!manifest) {
+        return {
+          status: 'failed',
+          sourceType,
+          source,
+          failureReason: `No valid extension.json found in ${localPath}`,
+          metadata: { path: localPath },
+        };
+      }
+
+      return {
+        status: 'resolved',
+        sourceType,
+        source,
+        latestVersion: manifest.version,
+        manifest,
+        metadata: { path: localPath },
+      };
+    }
+
+    if (sourceType === 'npm') {
+      const packageName = source.replace(/^npm:/, '');
+      const latestVersion = await fetchLatestNpmPackageVersion(packageName);
+      if (!latestVersion) {
+        return {
+          status: 'failed',
+          sourceType,
+          source,
+          failureReason: `Could not fetch npm metadata for ${packageName}`,
+          metadata: { packageName },
+        };
+      }
+
+      return {
+        status: 'resolved',
+        sourceType,
+        source,
+        latestVersion,
+        metadata: { packageName },
+      };
+    }
+
+    if (sourceType === 'github') {
+      const gitSource = parseGitSource(source);
+      const manifest = await fetchGitHubExtensionManifest(source);
+      if (!manifest) {
+        return {
+          status: 'failed',
+          sourceType,
+          source,
+          failureReason: 'Could not fetch GitHub extension manifest metadata',
+          metadata: {
+            host: gitSource.host ?? undefined,
+            owner: gitSource.owner ?? undefined,
+            repo: gitSource.repo ?? undefined,
+            ref: gitSource.ref ?? undefined,
+          },
+        };
+      }
+
+      return {
+        status: 'resolved',
+        sourceType,
+        source,
+        latestVersion: manifest.version,
+        manifest,
+        metadata: {
+          host: gitSource.host ?? undefined,
+          owner: gitSource.owner ?? undefined,
+          repo: gitSource.repo ?? undefined,
+          ref: gitSource.ref ?? undefined,
+        },
+      };
+    }
+
+    return {
+      status: 'failed',
+      sourceType,
+      source,
+      failureReason: `Lightweight version checks are not available for ${sourceType} sources`,
+    };
+  } catch (error) {
+    return {
+      status: 'failed',
+      sourceType,
+      source,
+      failureReason: (error as Error).message,
+    };
   }
 }
 

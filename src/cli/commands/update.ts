@@ -161,7 +161,16 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
   if (extensions.length > 0) {
     console.log(chalk.dim('Refreshing extensions...\n'));
 
-    const extensionSummary = await refreshExtensions(projectDir, config, { force });
+    const extensionSummary = await refreshExtensions(projectDir, config, {
+      force,
+      log: (level, message) => {
+        if (level === 'warn') {
+          console.log(chalk.yellow(`  ⚠ ${message}`));
+        } else {
+          console.log(chalk.dim(`  ${message}`));
+        }
+      },
+    });
 
     if (extensionSummary.updated.length > 0) {
       for (const r of extensionSummary.updated) {
@@ -172,6 +181,8 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
     for (const r of extensionSummary.skipped) {
       if (r.failureReason === 'rate-limited') {
         console.log(chalk.yellow(`  ⚠ ${r.name}: GitHub API rate limited`));
+      } else if (r.failureReason === 'lookup-failed') {
+        console.log(chalk.yellow(`  ⚠ ${r.name}: extension version check failed`));
       } else if (r.failureReason === 'source-type-requires-force') {
         console.log(chalk.dim(`  - ${r.name}: source type requires --force`));
       }
