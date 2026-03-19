@@ -1,17 +1,29 @@
 import chalk from 'chalk';
 import path from 'path';
 import { runWizard } from '../wizard/prompts.js';
-import { buildManagedSkillsState, installSkills } from '../../core/installer.js';
+import { buildManagedSkillsState, buildManagedSubagentsState, installSkills, installSubagents } from '../../core/installer.js';
 import { saveConfig, configExists, loadConfig, getCurrentVersion, type AgentInstallation } from '../../core/config.js';
 import { configureMcp, getMcpInstructions } from '../../core/mcp.js';
 import { getAgentConfig } from '../../core/agents.js';
 import { cleanupAgentSetup, getAgentOnboarding } from '../../core/transformer.js';
-import { removeDirectory } from '../../utils/fs.js';
+import { removeDirectory, removeFile } from '../../utils/fs.js';
 import { applyExtensionInjections } from '../../core/injections.js';
 import { collectReplacedSkills } from '../../core/extension-ops.js';
 
 async function removeAgentSetup(projectDir: string, agent: AgentInstallation): Promise<void> {
+  const agentConfig = getAgentConfig(agent.id);
   await removeDirectory(path.join(projectDir, agent.skillsDir));
+
+  // Remove only AI Factory-managed subagents, not the entire directory.
+  // The directory may contain user-created custom agents unrelated to AI Factory.
+  const subagentsDir = agent.subagentsDir ?? agentConfig.subagentsDir;
+  if (subagentsDir) {
+    const managedFiles = agent.installedSubagents ?? [];
+    for (const relPath of managedFiles) {
+      await removeFile(path.join(projectDir, subagentsDir, relPath));
+    }
+  }
+
   await cleanupAgentSetup(agent.id, projectDir, agent.skillsDir);
 }
 
@@ -57,6 +69,12 @@ export async function initCommand(): Promise<void> {
         skills: answers.selectedSkills,
         agentId: agentSelection.id,
       });
+      const installedSubagents = agentConfig.subagentsDir
+        ? await installSubagents({
+          projectDir,
+          subagentsDir: agentConfig.subagentsDir,
+        })
+        : [];
 
       const configuredMcp = await configureMcp(projectDir, {
         github: agentSelection.mcpGithub,
@@ -74,6 +92,10 @@ export async function initCommand(): Promise<void> {
         id: agentSelection.id,
         skillsDir: agentConfig.skillsDir,
         installedSkills,
+        ...(agentConfig.subagentsDir ? {
+          subagentsDir: agentConfig.subagentsDir,
+          installedSubagents,
+        } : {}),
         mcp: {
           github: agentSelection.mcpGithub,
           filesystem: agentSelection.mcpFilesystem,
@@ -101,6 +123,9 @@ export async function initCommand(): Promise<void> {
     for (const agent of installedAgents) {
       const managedBaseSkills = agent.installedSkills.filter(skill => !replacedSkills.has(skill));
       agent.managedSkills = await buildManagedSkillsState(projectDir, agent, managedBaseSkills);
+      if (agent.subagentsDir) {
+        agent.managedSubagents = await buildManagedSubagentsState(projectDir, agent, agent.installedSubagents ?? []);
+      }
     }
 
     await saveConfig(projectDir, {
@@ -119,6 +144,10 @@ export async function initCommand(): Promise<void> {
       console.log(chalk.bold(`${agentConfig.displayName}:`));
       console.log(chalk.dim(`  Skills directory: ${path.join(projectDir, agent.skillsDir)}`));
       console.log(chalk.dim(`  Installed skills: ${agent.installedSkills.length}`));
+      if (agent.subagentsDir) {
+        console.log(chalk.dim(`  Subagents directory: ${path.join(projectDir, agent.subagentsDir)}`));
+        console.log(chalk.dim(`  Installed subagents: ${agent.installedSubagents?.length ?? 0}`));
+      }
 
       const configuredMcp = mcpSummary[agent.id];
       if (configuredMcp && configuredMcp.length > 0) {
