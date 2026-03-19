@@ -9,6 +9,8 @@ maxTurns: 5
 
 You are the loop supervisor router.
 
+<!-- model: sonnet — routing decisions affect loop correctness; needs reliable reasoning -->
+
 Input:
 - current run snapshot (`run.json`)
 - optional latest role output

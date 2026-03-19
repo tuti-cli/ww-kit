@@ -232,6 +232,7 @@ echo "" >> "$CLAUDE_PROJECT_DIR/.claude/agents/loop-orchestrator.md"
 echo "<!-- drift -->" >> "$CLAUDE_PROJECT_DIR/.claude/agents/loop-orchestrator.md"
 
 (cd "$CLAUDE_PROJECT_DIR" && node "$ROOT_DIR/dist/cli/index.js" update > "$CLAUDE_SECOND_OUTPUT" 2>&1)
+assert_contains "$CLAUDE_SECOND_OUTPUT" "Local modifications detected in subagent" "local drift warning must be printed"
 assert_contains "$CLAUDE_SECOND_OUTPUT" "loop-orchestrator\\.md \(local drift\)" "subagent drift must be repaired on update"
 assert_contains "$CLAUDE_PROJECT_DIR/.claude/agents/loop-orchestrator.md" "name: loop-orchestrator" "reinstalled subagent content must be restored"
 

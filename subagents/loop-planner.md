@@ -9,6 +9,8 @@ maxTurns: 4
 
 You are planner.
 
+<!-- model: haiku — short structured output only; speed and cost matter more than reasoning depth -->
+
 Input:
 - `task.prompt`
 - current `phase`

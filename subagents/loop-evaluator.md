@@ -9,6 +9,8 @@ maxTurns: 6
 
 You are evaluator.
 
+<!-- model: inherit — parent controls quality/cost tradeoff depending on context -->
+
 Input:
 - artifact markdown
 - active rules

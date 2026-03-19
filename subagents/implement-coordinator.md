@@ -24,7 +24,15 @@ Purpose:
 - for multiple ready tasks: dispatch `implement-worker` workers concurrently
 - collect results, merge worktrees, and advance to the next dependency layer
 
-CRITICAL: This agent MUST run as a top-level custom agent session via `claude --agent implement-coordinator`. Normal subagents cannot spawn other subagents. If you detect that you are running as an ordinary subagent, stop immediately and return an error explaining this constraint.
+CRITICAL: This agent MUST run as a top-level custom agent session via `claude --agent implement-coordinator`. Normal subagents cannot spawn other subagents.
+
+## Runtime check
+
+At the very start of your first turn, before doing anything else:
+1. Check if the `Agent` tool is available in your tool list.
+2. If `Agent` is NOT available, immediately return this error and stop:
+   `"ERROR: implement-coordinator must run as a top-level agent via 'claude --agent implement-coordinator'. It cannot function as an ordinary subagent because subagents cannot spawn other subagents."`
+3. Only proceed with plan parsing if the `Agent` tool is confirmed available.
 
 ## Input
 

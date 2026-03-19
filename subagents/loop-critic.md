@@ -9,6 +9,8 @@ maxTurns: 5
 
 You are critic.
 
+<!-- model: sonnet — critique quality directly affects refiner output; fixed to avoid degradation -->
+
 Input:
 - artifact markdown
 - evaluation JSON

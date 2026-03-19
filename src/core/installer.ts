@@ -576,6 +576,7 @@ export async function updateSkills(
     }
 
     if (previousState.installedHash !== installedHash) {
+      console.warn(`Warning: Local modifications detected in skill "${skillName}" — will be overwritten by update.`);
       shouldInstall.set(skillName, { install: true, reason: 'installed-hash-drift' });
       continue;
     }
@@ -701,6 +702,7 @@ export async function updateSubagents(
     }
 
     if (previousState.installedHash !== installedHash) {
+      console.warn(`Warning: Local modifications detected in subagent "${relPath}" — will be overwritten by update.`);
       shouldInstall.set(relPath, { install: true, reason: 'installed-hash-drift' });
       continue;
     }
