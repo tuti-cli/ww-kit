@@ -2,7 +2,7 @@
 
 # Extensions
 
-Extensions let third-party developers add new capabilities to AI Factory — custom CLI commands, MCP servers, skill injections, agent definitions, and more. Extensions survive `ai-factory update` (injections are automatically re-applied after skills are refreshed).
+Extensions let third-party developers add new capabilities to ww-kit — custom CLI commands, MCP servers, skill injections, agent definitions, and more. Extensions survive `ww-kit update` (injections are automatically re-applied after skills are refreshed).
 
 ## For Users
 
@@ -10,46 +10,46 @@ Extensions let third-party developers add new capabilities to AI Factory — cus
 
 ```bash
 # From a local directory
-ai-factory extension add ./my-extension
+ww-kit extension add ./my-extension
 
 # From a git repository
-ai-factory extension add https://github.com/user/aif-ext-example.git
+ww-kit extension add https://github.com/user/ww-ext-example.git
 
 # From npm
-ai-factory extension add aif-ext-example
+ww-kit extension add aif-ext-example
 ```
 
 ### Managing Extensions
 
 ```bash
 # List installed extensions
-ai-factory extension list
+ww-kit extension list
 
 # Update extensions from their sources
-ai-factory extension update
+ww-kit extension update
 
 # Update a specific extension
-ai-factory extension update aif-ext-example
+ww-kit extension update aif-ext-example
 
 # Force refresh even if version unchanged
-ai-factory extension update --force
+ww-kit extension update --force
 
 # Remove an extension (cleans up injections, MCP servers, and files)
-ai-factory extension remove aif-ext-example
+ww-kit extension remove aif-ext-example
 ```
 
 ### What Happens on Install
 
-1. Extension files are copied to `.ai-factory/extensions/<name>/`
-2. Extension is recorded in `.ai-factory.json` under `extensions`
+1. Extension files are copied to `.ww-kit/extensions/<name>/`
+2. Extension is recorded in `.ww-kit.json` under `extensions`
 3. Extension skills (from `skills`) are installed into configured agents
-4. Injections are applied to matching skill files (e.g. appending extra instructions to `/aif-implement`)
+4. Injections are applied to matching skill files (e.g. appending extra instructions to `/ww-do`)
 5. MCP servers are merged into each agent's settings file (e.g. `.mcp.json`)
 6. Custom CLI commands become available immediately
 
 ### What Happens on Update
 
-Running `ai-factory update`:
+Running `ww-kit update`:
 
 1. **Self-update check** — prompts to update the CLI if a newer version exists
 2. **Extension refresh** — checks installed extensions for updates from their sources:
@@ -61,7 +61,7 @@ Running `ai-factory update`:
 4. **Reinstall replacement skills** — re-installs skills from extension manifests
 5. **Re-apply injections** — re-applies all extension injections automatically
 
-`ai-factory update --force` forces a clean reinstall of base skills AND forces extension refresh regardless of version changes.
+`ww-kit update --force` forces a clean reinstall of base skills AND forces extension refresh regardless of version changes.
 
 #### Extension Update Behavior
 
@@ -79,22 +79,22 @@ GitHub API requests use `GITHUB_TOKEN` if present (5000 req/hr). Without a token
 ```bash
 # Set GITHUB_TOKEN for higher rate limits
 export GITHUB_TOKEN=ghp_xxxx
-ai-factory update
+ww-kit update
 ```
 
 ### Updating Extensions Separately
 
-Use `ai-factory extension update` to refresh extensions without updating base skills:
+Use `ww-kit extension update` to refresh extensions without updating base skills:
 
 ```bash
 # Update all extensions
-ai-factory extension update
+ww-kit extension update
 
 # Update a specific extension
-ai-factory extension update aif-ext-example
+ww-kit extension update aif-ext-example
 
 # Force refresh regardless of version
-ai-factory extension update --force
+ww-kit extension update --force
 ```
 
 The command outputs per-extension status:
@@ -114,8 +114,8 @@ Summary:
 
 1. Injection markers are stripped from all skill files
 2. MCP server entries are removed from agent settings files
-3. Extension directory is deleted from `.ai-factory/extensions/`
-4. Extension record is removed from `.ai-factory.json`
+3. Extension directory is deleted from `.ww-kit/extensions/`
+4. Extension record is removed from `.ww-kit.json`
 
 ---
 
@@ -136,7 +136,7 @@ my-extension/
 ├── skills/                 # Custom and replacement skills
 │   ├── my-skill/
 │   │   └── SKILL.md
-│   └── my-commit/          # Replaces built-in aif-commit
+│   └── my-commit/          # Replaces built-in ww-commit
 │       └── SKILL.md
 └── mcp/                    # MCP server templates
     └── my-server.json
@@ -182,7 +182,7 @@ my-extension/
   ],
   "injections": [
     {
-      "target": "aif-implement",
+      "target": "ww-do",
       "position": "append",
       "file": "./injections/implement-extra.md"
     }
@@ -192,7 +192,7 @@ my-extension/
     "skills/my-commit"
   ],
   "replaces": {
-    "skills/my-commit": "aif-commit"
+    "skills/my-commit": "ww-commit"
   },
   "mcpServers": [
     {
@@ -217,7 +217,7 @@ Only `name` and `version` are required. All other fields are optional.
 | `agents` | `array` | Agent definitions (id, directories, MCP support). |
 | `injections` | `array` | Content to inject into existing skill files. |
 | `skills` | `array` | Paths to skill directories within the extension. |
-| `replaces` | `object` | Maps extension skill paths to base skill names they replace (e.g. `{"skills/my-commit": "aif-commit"}`). |
+| `replaces` | `object` | Maps extension skill paths to base skill names they replace (e.g. `{"skills/my-commit": "ww-commit"}`). |
 | `mcpServers` | `array` | MCP server configurations to merge into agent settings. |
 
 ---
@@ -242,8 +242,8 @@ export function register(program) {
 After installation, the command is available as:
 
 ```bash
-ai-factory hello
-ai-factory hello --name Alice
+ww-kit hello
+ww-kit hello --name Alice
 ```
 
 Commands are loaded dynamically at CLI startup. A broken command module won't crash the CLI — it will log a warning to stderr and continue.
@@ -258,7 +258,7 @@ Injections append or prepend content to existing skill files. This lets extensio
 
 ```json
 {
-  "target": "aif-implement",
+  "target": "ww-do",
   "position": "append",
   "file": "./injections/implement-extra.md"
 }
@@ -266,7 +266,7 @@ Injections append or prepend content to existing skill files. This lets extensio
 
 | Field | Values | Description |
 |-------|--------|-------------|
-| `target` | Any skill name | The skill to inject into (e.g. `aif-implement`, `aif-commit`, `aif-plan`). |
+| `target` | Any skill name | The skill to inject into (e.g. `ww-do`, `ww-commit`, `ww-plan`). |
 | `position` | `append` or `prepend` | Where to insert the content. `prepend` inserts after YAML frontmatter. |
 | `file` | Relative path | Path to the markdown file within the extension directory. |
 
@@ -275,15 +275,15 @@ Injections append or prepend content to existing skill files. This lets extensio
 Injected content is wrapped in HTML comment markers for tracking:
 
 ```markdown
-<!-- aif-ext:my-extension:aif-implement:append:start -->
+<!-- aif-ext:my-extension:ww-do:append:start -->
 Your injected content here.
-<!-- aif-ext:my-extension:aif-implement:append:end -->
+<!-- aif-ext:my-extension:ww-do:append:end -->
 ```
 
 These markers enable:
 - **Idempotent application** — re-installing the same extension won't duplicate content
 - **Clean removal** — `extension remove` strips exactly the injected blocks
-- **Update survival** — `ai-factory update` overwrites base skills, then re-applies all injections
+- **Update survival** — `ww-kit update` overwrites base skills, then re-applies all injections
 
 #### Example Injection File
 
@@ -338,7 +338,7 @@ The template is merged into the agent's settings file under `mcpServers.<key>` (
 
 ### Agents
 
-Extensions can declare new agent configurations. These are currently stored in the manifest and shown during installation. Agent integration with the interactive wizard (`ai-factory init`) is planned for a future release.
+Extensions can declare new agent configurations. These are currently stored in the manifest and shown during installation. Agent integration with the interactive wizard (`ww-kit init`) is planned for a future release.
 
 ```json
 {
@@ -381,7 +381,7 @@ skills/my-custom-skill/
 └── SKILL.md
 ```
 
-On `ai-factory extension add`, these skills are installed into each configured agent's skills directory (using the same agent transformer logic as built-in skills). The original extension copy remains in `.ai-factory/extensions/<name>/`.
+On `ww-kit extension add`, these skills are installed into each configured agent's skills directory (using the same agent transformer logic as built-in skills). The original extension copy remains in `.ww-kit/extensions/<name>/`.
 
 ### Skill Replacements
 
@@ -391,7 +391,7 @@ Extensions can replace built-in skills with their own versions using the `replac
 {
   "skills": ["skills/my-commit"],
   "replaces": {
-    "skills/my-commit": "aif-commit"
+    "skills/my-commit": "ww-commit"
   }
 }
 ```
@@ -402,15 +402,15 @@ Extensions can replace built-in skills with their own versions using the `replac
 
 #### How Replacements Work
 
-The replacement skill is installed **under the base skill name**. For example, `skills/my-commit` from the extension will be installed as `aif-commit/SKILL.md` in the agent's skills directory. The user still invokes `/aif-commit` — but the content comes from the extension.
+The replacement skill is installed **under the base skill name**. For example, `skills/my-commit` from the extension will be installed as `ww-commit/SKILL.md` in the agent's skills directory. The user still invokes `/ww-commit` — but the content comes from the extension.
 
 **On install** (`extension add`):
 1. The extension skill overwrites the base skill directory (installed under the base name)
-2. The replacement is recorded in `.ai-factory.json`
+2. The replacement is recorded in `.ww-kit.json`
 
-**On update** (`ai-factory update`):
+**On update** (`ww-kit update`):
 1. Replaced base skills are **skipped** during reinstallation
-2. Extension replacement skills are re-installed from `.ai-factory/extensions/`
+2. Extension replacement skills are re-installed from `.ww-kit/extensions/`
 3. If the extension manifest is missing/broken, the base skill is **restored** automatically
 
 **On remove** (`extension remove`):
@@ -419,7 +419,7 @@ The replacement skill is installed **under the base skill name**. For example, `
 
 #### Example
 
-An extension that replaces `aif-commit` with a custom commit workflow:
+An extension that replaces `ww-commit` with a custom commit workflow:
 
 ```
 my-extension/
@@ -435,12 +435,12 @@ my-extension/
   "version": "1.0.0",
   "skills": ["skills/my-commit"],
   "replaces": {
-    "skills/my-commit": "aif-commit"
+    "skills/my-commit": "ww-commit"
   }
 }
 ```
 
-After installation, the extension's `my-commit/SKILL.md` is installed as `aif-commit/SKILL.md`. The user invokes `/aif-commit` as before — the replacement is transparent.
+After installation, the extension's `my-commit/SKILL.md` is installed as `ww-commit/SKILL.md`. The user invokes `/ww-commit` as before — the replacement is transparent.
 
 ---
 
@@ -448,7 +448,7 @@ After installation, the extension's `my-commit/SKILL.md` is installed as `aif-co
 
 ```
 your-project/
-├── .ai-factory/
+├── .ww-kit/
 │   ├── extensions/
 │   │   └── aif-ext-example/        # Installed extension
 │   │       ├── extension.json
@@ -457,15 +457,15 @@ your-project/
 │   │       ├── skills/
 │   │       └── mcp/
 │   └── ...
-├── .ai-factory.json                 # extensions[] array tracks installed extensions
+├── .ww-kit.json                 # extensions[] array tracks installed extensions
 └── .mcp.json                        # MCP servers merged here (for Claude Code)
 ```
 
-Extensions are stored in `.ai-factory/extensions/` — this keeps them separate from the project's package system and works with any language (Python, Go, Rust, etc.).
+Extensions are stored in `.ww-kit/extensions/` — this keeps them separate from the project's package system and works with any language (Python, Go, Rust, etc.).
 
 ## Config Format
 
-Extensions are tracked in `.ai-factory.json`:
+Extensions are tracked in `.ww-kit.json`:
 
 ```json
 {
@@ -474,7 +474,7 @@ Extensions are tracked in `.ai-factory.json`:
   "extensions": [
     {
       "name": "aif-ext-example",
-      "source": "https://github.com/user/aif-ext-example.git",
+      "source": "https://github.com/user/ww-ext-example.git",
       "version": "1.0.0"
     }
   ]
@@ -486,7 +486,7 @@ Extensions are tracked in `.ai-factory.json`:
 ## Security Considerations
 
 - **Extension names are validated** — names containing `..`, absolute paths, or special characters are rejected to prevent path traversal.
-- **Only registered extensions are loaded** — extensions must be listed in `.ai-factory.json` to have their commands executed. A rogue directory in `.ai-factory/extensions/` is ignored.
+- **Only registered extensions are loaded** — extensions must be listed in `.ww-kit.json` to have their commands executed. A rogue directory in `.ww-kit/extensions/` is ignored.
 - **Shell commands use argument arrays** — `git clone` and `npm pack` use `execFileSync` (no shell interpolation) to prevent command injection via malicious source URLs.
 - **Extensions execute code** — command modules are dynamically imported. Only install extensions you trust, just as you would with npm packages.
 
@@ -496,11 +496,11 @@ Extensions built by the community. To add yours, submit a PR to this file.
 
 | Extension | Description | Install |
 |-----------|-------------|---------|
-| [Remote Skills](https://github.com/dealenx/ai-factory-extension-remote-skills) | Install and manage skills from GitHub repositories. Supports branch selection, interactive removal, and sync with active agents. | `ai-factory extension add https://github.com/dealenx/ai-factory-extension-remote-skills.git` |
-| [AIF Extension Creator](https://github.com/dealenx/ai-factory-extension-aif-extension-creator-skill) |An AI Factory extension that provides an interactive skill for scaffolding new AI Factory extensions. | `ai-factory extension add https://github.com/dealenx/ai-factory-extension-aif-extension-creator-skill.git` |
+| [Remote Skills](https://github.com/dealenx/ai-factory-extension-remote-skills) | Install and manage skills from GitHub repositories. Supports branch selection, interactive removal, and sync with active agents. | `ww-kit extension add https://github.com/dealenx/ai-factory-extension-remote-skills.git` |
+| [AIF Extension Creator](https://github.com/dealenx/ai-factory-extension-aif-extension-creator-skill) |An ww-kit extension that provides an interactive skill for scaffolding new ww-kit extensions. | `ww-kit extension add https://github.com/dealenx/ai-factory-extension-aif-extension-creator-skill.git` |
 
 ## See Also
 
-- [Configuration](configuration.md) — `.ai-factory.json` format, MCP servers, project structure
+- [Configuration](configuration.md) — `.ww-kit.json` format, MCP servers, project structure
 - [Core Skills](skills.md) — all built-in slash commands
 - [Security](security.md) — two-level security scanning for external skills

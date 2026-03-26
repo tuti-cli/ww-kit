@@ -9,13 +9,13 @@ import { loadAllExtensions } from '../core/extensions.js';
 const program = new Command();
 
 program
-  .name('ai-factory')
-  .description('CLI tool for automating AI agent context setup')
+  .name('ww-kit')
+  .description('AI-powered development workflow kit for Claude Code')
   .version(getCurrentVersion());
 
 program
   .command('init')
-  .description('Initialize ai-factory in current project')
+  .description('Initialize ww-kit in current project')
   .action(initCommand);
 
 program

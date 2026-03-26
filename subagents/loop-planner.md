@@ -1,6 +1,6 @@
 ---
 name: loop-planner
-description: Build a short, execution-focused iteration plan (3-5 steps) aligned to active rules. Use proactively within /aif-loop when the next iteration plan is needed.
+description: Build a short, execution-focused iteration plan (3-5 steps) aligned to active rules. Use proactively within /ww-loop when the next iteration plan is needed.
 tools: Read, Glob, Grep
 model: haiku
 permissionMode: plan

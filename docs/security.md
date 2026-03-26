@@ -2,9 +2,9 @@
 
 # Security
 
-**Security is a first-class citizen in AI Factory.** Skills downloaded from external sources (skills.sh, GitHub, URLs) can contain prompt injection attacks — malicious instructions hidden inside SKILL.md files that hijack agent behavior, steal credentials, or execute destructive commands.
+**Security is a first-class citizen in ww-kit.** Skills downloaded from external sources (skills.sh, GitHub, URLs) can contain prompt injection attacks — malicious instructions hidden inside SKILL.md files that hijack agent behavior, steal credentials, or execute destructive commands.
 
-AI Factory protects against this with a **mandatory two-level security scan** that runs before any external skill is used:
+ww-kit protects against this with a **mandatory two-level security scan** that runs before any external skill is used:
 
 ```
 External skill downloaded
@@ -72,28 +72,28 @@ A skill with **any CRITICAL threat is never installed**. No exceptions, no overr
 
 ```bash
 # Scan a skill directory (use your agent's skills path)
-python3 .claude/skills/aif-skill-generator/scripts/security-scan.py ./my-downloaded-skill/
+python3 .claude/skills/wws-skill/scripts/security-scan.py ./my-downloaded-skill/
 
 # Strict mode: code block examples are treated as real threats (no demotion)
-python3 .claude/skills/aif-skill-generator/scripts/security-scan.py --strict ./my-downloaded-skill/
+python3 .claude/skills/wws-skill/scripts/security-scan.py --strict ./my-downloaded-skill/
 
 # Scan a single SKILL.md file
-python3 .claude/skills/aif-skill-generator/scripts/security-scan.py ./my-skill/SKILL.md
+python3 .claude/skills/wws-skill/scripts/security-scan.py ./my-skill/SKILL.md
 
 # For other agents, adjust the path accordingly:
-# python3 .codex/skills/aif-skill-generator/scripts/security-scan.py ./my-skill/
-# python3 .agents/skills/aif-skill-generator/scripts/security-scan.py ./my-skill/
+# python3 .codex/skills/wws-skill/scripts/security-scan.py ./my-skill/
+# python3 .agents/skills/wws-skill/scripts/security-scan.py ./my-skill/
 ```
 
-## Internal Self-Scan (AI Factory repo)
+## Internal Self-Scan (ww-kit repo)
 
-Built-in AI Factory skills contain security threat examples in documentation, which can trigger expected false positives.
+Built-in ww-kit skills contain security threat examples in documentation, which can trigger expected false positives.
 For repository self-audits, use the internal allowlist:
 
 ```bash
 ./scripts/security-self-scan.sh
 # or:
-# python3 skills/aif-skill-generator/scripts/security-scan.py \
+# python3 skills/wws-skill/scripts/security-scan.py \
 #   --md-only \
 #   --allowlist scripts/security-scan-allowlist-ai-factory.json \
 #   skills/
@@ -103,7 +103,7 @@ Use `--allowlist` only for trusted first-party content. Do not use it when scann
 
 ## See Also
 
-- [Core Skills](skills.md) — `/aif-security-checklist` for project-level security audits
+- [Core Skills](skills.md) — `/wws-security` for project-level security audits
 - [Plan Files](plan-files.md) — skill acquisition strategy and how scanning fits in
 - [Extensions](extensions.md) — extension system and its security model
 - [Configuration](configuration.md) — MCP servers and project structure

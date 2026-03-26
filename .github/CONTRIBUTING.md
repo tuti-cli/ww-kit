@@ -1,4 +1,4 @@
-# Contributing to AI Factory
+# Contributing to ww-kit
 
 Thanks for your interest in contributing! This guide will help you get started.
 
@@ -14,8 +14,8 @@ Thanks for your interest in contributing! This guide will help you get started.
 2. Clone your fork:
 
 ```bash
-git clone https://github.com/<your-username>/ai-factory.git
-cd ai-factory
+git clone https://github.com/<your-username>/ww-kit.git
+cd ww-kit
 ```
 
 3. Install dependencies and build:
@@ -63,4 +63,4 @@ Each skill lives in `skills/<skill-name>/` and contains a `SKILL.md` file that d
 
 ## Reporting Issues
 
-Open an issue at [github.com/lee-to/ai-factory/issues](https://github.com/lee-to/ai-factory/issues). 
+Open an issue at [github.com/lee-to/ww-kit/issues](https://github.com/lee-to/ww-kit/issues). 

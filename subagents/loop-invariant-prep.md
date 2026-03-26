@@ -1,6 +1,6 @@
 ---
 name: loop-invariant-prep
-description: Prepare invariant and consistency checks for the current loop iteration. Use proactively within /aif-loop in parallel with producer.
+description: Prepare invariant and consistency checks for the current loop iteration. Use proactively within /ww-loop in parallel with producer.
 tools: Read, Glob, Grep
 model: haiku
 permissionMode: plan

@@ -2,7 +2,7 @@
 
 # Configuration
 
-## `.ai-factory.json`
+## `.ww-kit.json`
 
 ```json
 {
@@ -12,7 +12,7 @@
       "id": "claude",
       "skillsDir": ".claude/skills",
       "subagentsDir": ".claude/agents",
-      "installedSkills": ["aif", "aif-plan", "aif-improve", "aif-implement", "aif-commit", "aif-build-automation"],
+      "installedSkills": ["aif", "ww-plan", "ww-improve", "ww-do", "ww-commit", "wws-build"],
       "installedSubagents": [
         "best-practices-sidecar.md",
         "commit-preparer.md",
@@ -44,7 +44,7 @@
     {
       "id": "codex",
       "skillsDir": ".codex/skills",
-      "installedSkills": ["aif", "aif-plan", "aif-implement"],
+      "installedSkills": ["aif", "ww-plan", "ww-do"],
       "mcp": {
         "github": false,
         "postgres": false,
@@ -57,16 +57,16 @@
   "extensions": [
     {
       "name": "aif-ext-example",
-      "source": "https://github.com/user/aif-ext-example.git",
+      "source": "https://github.com/user/ww-ext-example.git",
       "version": "1.0.0"
     }
   ]
 }
 ```
 
-The `agents` array can include any supported agent IDs: `claude`, `cursor`, `windsurf`, `roocode`, `kilocode`, `antigravity`, `opencode`, `warp`, `zencoder`, `codex`, `copilot`, `gemini`, `junie`, or `universal`. Each agent keeps its own `skillsDir`, installed skills list, and MCP preferences. Claude Code agents also persist `subagentsDir` and `installedSubagents`, so `ai-factory update` can refresh `.claude/agents/` alongside skills. AI Factory additionally stores internal `managedSkills` and `managedSubagents` hash maps in `.ai-factory.json`; they are omitted from the example above for brevity.
+The `agents` array can include any supported agent IDs: `claude`, `cursor`, `windsurf`, `roocode`, `kilocode`, `antigravity`, `opencode`, `warp`, `zencoder`, `codex`, `copilot`, `gemini`, `junie`, or `universal`. Each agent keeps its own `skillsDir`, installed skills list, and MCP preferences. Claude Code agents also persist `subagentsDir` and `installedSubagents`, so `ww-kit update` can refresh `.claude/agents/` alongside skills. ww-kit additionally stores internal `managedSkills` and `managedSubagents` hash maps in `.ww-kit.json`; they are omitted from the example above for brevity.
 
-The optional `extensions` array tracks installed extensions by name, original source, and version. `ai-factory update` now refreshes these extensions from their saved sources before base-skill updates, and `ai-factory extension update [name] --force` refreshes them without running the full base-skill update flow.
+The optional `extensions` array tracks installed extensions by name, original source, and version. `ww-kit update` now refreshes these extensions from their saved sources before base-skill updates, and `ww-kit extension update [name] --force` refreshes them without running the full base-skill update flow.
 
 Extension refresh uses the saved `source` field:
 
@@ -78,7 +78,7 @@ When GitHub-backed extension refreshes are frequent, set `GITHUB_TOKEN` to raise
 
 ## MCP Configuration
 
-AI Factory can configure these MCP servers:
+ww-kit can configure these MCP servers:
 
 | MCP Server | Use Case | Env Variable |
 |------------|----------|--------------|
@@ -139,75 +139,75 @@ your-project/
 │   │   └── security-sidecar.md
 │   ├── skills/
 │   │   ├── aif/
-│   │   ├── aif-plan/
-│   │   ├── aif-improve/
-│   │   ├── aif-implement/
-│   │   ├── aif-commit/
-│   │   ├── aif-dockerize/
-│   │   ├── aif-build-automation/
-│   │   ├── aif-verify/
-│   │   ├── aif-docs/
-│   │   ├── aif-reference/
-│   │   ├── aif-review/
-│   │   └── aif-skill-generator/
+│   │   ├── ww-plan/
+│   │   ├── ww-improve/
+│   │   ├── ww-do/
+│   │   ├── ww-commit/
+│   │   ├── wws-docker/
+│   │   ├── wws-build/
+│   │   ├── ww-verify/
+│   │   ├── wws-docs/
+│   │   ├── ww-reference/
+│   │   ├── ww-review/
+│   │   └── wws-skill/
 │   └── settings.local.json    # Permissions config (gitignored)
-├── .ai-factory/               # AI Factory working directory
+├── .ww-kit/               # ww-kit working directory
 │   ├── DESCRIPTION.md         # Project specification
 │   ├── ARCHITECTURE.md        # Architecture decisions and guidelines
-│   ├── PLAN.md                # Current plan (from /aif-plan fast)
-│   ├── SECURITY.md            # Ignored security items (from /aif-security-checklist ignore)
-│   ├── extensions/            # Installed extensions (from ai-factory extension add)
+│   ├── PLAN.md                # Current plan (from /ww-plan fast)
+│   ├── SECURITY.md            # Ignored security items (from /wws-security ignore)
+│   ├── extensions/            # Installed extensions (from ww-kit extension add)
 │   │   └── <extension-name>/
 │   │       └── extension.json
-│   ├── references/            # Knowledge references from external sources (from /aif-reference)
+│   ├── references/            # Knowledge references from external sources (from /ww-reference)
 │   │   └── <topic>.md
-│   ├── plans/                 # Plans from /aif-plan full
+│   ├── plans/                 # Plans from /ww-plan full
 │   │   └── <branch-name>.md
-│   ├── skill-context/         # Project-specific rules for built-in skills (from /aif-evolve)
-│   │   ├── aif-fix/
+│   ├── skill-context/         # Project-specific rules for built-in skills (from /ww-evolve)
+│   │   ├── ww-fix/
 │   │   │   └── SKILL.md
-│   │   └── aif-review/
+│   │   └── ww-review/
 │   │       └── SKILL.md
-│   ├── patches/               # Self-improvement patches (from /aif-fix)
+│   ├── patches/               # Self-improvement patches (from /ww-fix)
 │   │   └── 2026-02-07-14.30.md
-│   ├── evolutions/            # Evolution logs (from /aif-evolve)
+│   ├── evolutions/            # Evolution logs (from /ww-evolve)
 │   │   ├── 2026-02-08-10.00.md
 │   │   └── patch-cursor.json  # Incremental evolve cursor (latest processed patch)
-│   └── evolution/             # Active reflex loop state (from /aif-loop)
+│   └── evolution/             # Active reflex loop state (from /ww-loop)
 │       ├── current.json
 │       └── <task-alias>/
 │           ├── run.json
 │           ├── history.jsonl
 │           └── artifact.md
 ├── .mcp.json                  # MCP servers config (Claude Code project scope)
-└── .ai-factory.json           # AI Factory config
+└── .ww-kit.json           # ww-kit config
 ```
 
 ## Reflex Loop Files
 
-`/aif-loop` keeps state lean and resumable between sessions:
+`/ww-loop` keeps state lean and resumable between sessions:
 
-- `.ai-factory/evolution/current.json` — active loop pointer (to current run)
-- `.ai-factory/evolution/<task-alias>/run.json` — current run snapshot (loop execution state)
-- `.ai-factory/evolution/<task-alias>/history.jsonl` — append-only event history
-- `.ai-factory/evolution/<task-alias>/artifact.md` — latest artifact output
+- `.ww-kit/evolution/current.json` — active loop pointer (to current run)
+- `.ww-kit/evolution/<task-alias>/run.json` — current run snapshot (loop execution state)
+- `.ww-kit/evolution/<task-alias>/history.jsonl` — append-only event history
+- `.ww-kit/evolution/<task-alias>/artifact.md` — latest artifact output
 
 For full phase contracts and stop conditions, see [Reflex Loop](loop.md).
 
 ## Evolution Cursor File
 
-`/aif-evolve` uses a lightweight cursor to process patches incrementally:
+`/ww-evolve` uses a lightweight cursor to process patches incrementally:
 
-- `.ai-factory/evolutions/patch-cursor.json` — last processed patch marker
+- `.ww-kit/evolutions/patch-cursor.json` — last processed patch marker
 - First run (no cursor): evolve reads all patches
 - Subsequent runs: evolve reads patches newer than the cursor (plus a small overlap window to catch missed points)
-- To force a full rescan: delete `patch-cursor.json` and run `/aif-evolve` again
+- To force a full rescan: delete `patch-cursor.json` and run `/ww-evolve` again
 
 ## Best Practices
 
 ### Artifact Ownership and Context Gates
-- Keep context artifact ownership command-scoped (roadmap by `/aif-roadmap`, rules by `/aif-rules`, architecture by `/aif-architecture`, research by `/aif-explore`).
-- Treat `/aif-commit`, `/aif-review`, and `/aif-verify` as read-only consumers of context artifacts by default.
+- Keep context artifact ownership command-scoped (roadmap by `/wws-roadmap`, rules by `/ww-rules`, architecture by `/ww-arch`, research by `/ww-explore`).
+- Treat `/ww-commit`, `/ww-review`, and `/ww-verify` as read-only consumers of context artifacts by default.
 - Use `WARN` for non-blocking gate findings (missing optional files, ambiguous mapping) and `ERROR` for blocking violations.
 
 ### Logging
@@ -230,6 +230,6 @@ All implementations include verbose, configurable logging:
 
 - [Getting Started](getting-started.md) — installation, supported agents, first project
 - [Development Workflow](workflow.md) — how to use the workflow skills
-- [Reflex Loop](loop.md) — contracts and storage layout for `/aif-loop`
+- [Reflex Loop](loop.md) — contracts and storage layout for `/ww-loop`
 - [Extensions](extensions.md) — writing and installing extensions
 - [Security](security.md) — how external skills are scanned before use

@@ -386,7 +386,7 @@ Existing project agents in `.claude/agents/`:
 | `loop-test-prep` | lightweight test prep | `haiku` | `Read, Glob, Grep` |
 | `loop-perf-prep` | performance prep | `haiku` | `Read, Glob, Grep` |
 | `loop-invariant-prep` | invariants/consistency prep | `haiku` | `Read, Glob, Grep` |
-| `plan-polisher` | run `/aif-plan`, critique the result, and loop `/aif-improve` until stable. Accepts `tests`/`docs` params (`yes`/`no`/`infer`; default `infer` — auto-detects from project) | `inherit` | `Read, Write, Edit, Glob, Grep, Bash` |
+| `plan-polisher` | run `/ww-plan`, critique the result, and loop `/ww-improve` until stable. Accepts `tests`/`docs` params (`yes`/`no`/`infer`; default `infer` — auto-detects from project) | `inherit` | `Read, Write, Edit, Glob, Grep, Bash` |
 | `review-sidecar` | background read-only review worker | `inherit` | `Read, Glob, Grep` |
 | `security-sidecar` | background read-only security worker | `inherit` | `Read, Glob, Grep` |
 
@@ -397,7 +397,7 @@ Patterns already worth preserving here:
 - cheap model for prep, stronger model for transformation/judgment
 - small `maxTurns`
 - no hidden delegation inside workers
-- use `skills:` for domain injection when a worker must follow existing AI Factory workflows
+- use `skills:` for domain injection when a worker must follow existing ww-kit workflows
 - keep multi-skill workers explicit about which findings are blocking vs non-blocking
 - use background workers only for read-only noisy checks that can fail closed
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Smoke tests: validates ai-factory init for Claude Code subagent installation
+# Smoke tests: validates ww-kit init for Claude Code subagent installation
 
 set -euo pipefail
 
@@ -48,7 +48,7 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 
 const promptQueue = [
-  { selectedAgents: ['claude'], selectedSkills: ['aif'] },
+  { selectedSkills: ['ww'] },
   { configureMcp: false },
 ];
 
@@ -73,7 +73,7 @@ try {
 }
 EOF
 
-assert_contains "$INIT_OUTPUT" "Claude Code:" "Claude Code summary must be printed"
+assert_contains "$INIT_OUTPUT" "Setup complete" "Setup complete message must be printed"
 assert_contains "$INIT_OUTPUT" "Subagents directory:" "Claude init summary must include subagents directory"
 assert_contains "$INIT_OUTPUT" "Installed subagents: ${EXPECTED_SUBAGENTS}" "Claude init summary must report installed subagents"
 assert_exists "$PROJECT_DIR/.claude/agents/best-practices-sidecar.md" "Claude init must install best-practices sidecar"
@@ -93,6 +93,6 @@ if [[ "$ACTUAL_SUBAGENTS" != "$EXPECTED_SUBAGENTS" ]]; then
   exit 1
 fi
 
-EXPECTED_SUBAGENTS="$EXPECTED_SUBAGENTS" node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const a=c.agents[0];const expected=Number(process.env.EXPECTED_SUBAGENTS);if(a.id!=='claude')process.exit(1);if(a.subagentsDir!=='.claude/agents')process.exit(1);if(!Array.isArray(a.installedSubagents)||a.installedSubagents.length!==expected)process.exit(1);if(!a.installedSubagents.includes('best-practices-sidecar.md'))process.exit(1);if(!a.installedSubagents.includes('commit-preparer.md'))process.exit(1);if(!a.installedSubagents.includes('docs-auditor.md'))process.exit(1);if(!a.installedSubagents.includes('implement-worker.md'))process.exit(1);if(!a.installedSubagents.includes('loop-orchestrator.md'))process.exit(1);if(!a.installedSubagents.includes('plan-polisher.md'))process.exit(1);if(!a.installedSubagents.includes('review-sidecar.md'))process.exit(1);if(!a.installedSubagents.includes('security-sidecar.md'))process.exit(1);if(!a.managedSubagents||Object.keys(a.managedSubagents).length!==expected)process.exit(1);" "$PROJECT_DIR/.ai-factory.json"
+EXPECTED_SUBAGENTS="$EXPECTED_SUBAGENTS" node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));const a=c.agents[0];const expected=Number(process.env.EXPECTED_SUBAGENTS);if(a.id!=='claude')process.exit(1);if(a.subagentsDir!=='.claude/agents')process.exit(1);if(!Array.isArray(a.installedSubagents)||a.installedSubagents.length!==expected)process.exit(1);if(!a.installedSubagents.includes('best-practices-sidecar.md'))process.exit(1);if(!a.installedSubagents.includes('commit-preparer.md'))process.exit(1);if(!a.installedSubagents.includes('docs-auditor.md'))process.exit(1);if(!a.installedSubagents.includes('implement-worker.md'))process.exit(1);if(!a.installedSubagents.includes('loop-orchestrator.md'))process.exit(1);if(!a.installedSubagents.includes('plan-polisher.md'))process.exit(1);if(!a.installedSubagents.includes('review-sidecar.md'))process.exit(1);if(!a.installedSubagents.includes('security-sidecar.md'))process.exit(1);if(!a.managedSubagents||Object.keys(a.managedSubagents).length!==expected)process.exit(1);" "$PROJECT_DIR/.ww-kit.json"
 
 echo "claude init smoke tests passed"

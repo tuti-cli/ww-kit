@@ -37,13 +37,13 @@ export interface ExtensionRecord {
   replacedSkills?: string[];
 }
 
-export interface AiFactoryConfig {
+export interface AppConfig {
   version: string;
   agents: AgentInstallation[];
   extensions?: ExtensionRecord[];
 }
 
-interface LegacyAiFactoryConfig {
+interface LegacyConfig {
   version?: string;
   agent?: string;
   skillsDir?: string;
@@ -51,7 +51,7 @@ interface LegacyAiFactoryConfig {
   mcp?: Partial<McpConfig>;
 }
 
-const CONFIG_FILENAME = '.ai-factory.json';
+const CONFIG_FILENAME = '.ww-kit.json';
 const CURRENT_VERSION: string = pkg.version;
 
 function getConfigPath(projectDir: string): string {
@@ -65,20 +65,6 @@ function normalizeMcp(mcp?: Partial<McpConfig>): McpConfig {
     postgres: mcp?.postgres ?? false,
     chromeDevtools: mcp?.chromeDevtools ?? false,
     playwright: mcp?.playwright ?? false,
-  };
-}
-
-function createAgentInstallation(agentId: string, legacy?: LegacyAiFactoryConfig): AgentInstallation {
-  const agent = getAgentConfig(agentId);
-  return {
-    skillsDir: legacy?.skillsDir ?? agent.skillsDir,
-    id: agentId,
-    installedSkills: legacy?.installedSkills ?? [],
-    managedSkills: {},
-    subagentsDir: agent.subagentsDir,
-    installedSubagents: [],
-    managedSubagents: {},
-    mcp: normalizeMcp(legacy?.mcp),
   };
 }
 
@@ -105,27 +91,25 @@ function normalizeManagedArtifacts(raw: unknown): Record<string, ManagedArtifact
   return result;
 }
 
-export async function loadConfig(projectDir: string): Promise<AiFactoryConfig | null> {
+export async function loadConfig(projectDir: string): Promise<AppConfig | null> {
   const configPath = getConfigPath(projectDir);
-  const raw = await readJsonFile<AiFactoryConfig & LegacyAiFactoryConfig>(configPath);
+  const raw = await readJsonFile<AppConfig & LegacyConfig>(configPath);
   if (!raw) {
     return null;
   }
 
   if (Array.isArray(raw.agents)) {
-    const normalizedAgents = raw.agents.map(agent => {
-      const agentConfig = getAgentConfig(agent.id);
-      return {
-        id: agent.id,
-        skillsDir: agent.skillsDir || agentConfig.skillsDir,
-        installedSkills: Array.isArray(agent.installedSkills) ? agent.installedSkills : [],
-        managedSkills: normalizeManagedArtifacts((agent as { managedSkills?: unknown }).managedSkills),
-        subagentsDir: agent.subagentsDir || agentConfig.subagentsDir,
-        installedSubagents: Array.isArray(agent.installedSubagents) ? agent.installedSubagents : [],
-        managedSubagents: normalizeManagedArtifacts((agent as { managedSubagents?: unknown }).managedSubagents),
-        mcp: normalizeMcp(agent.mcp),
-      };
-    });
+    const agentConfig = getAgentConfig();
+    const normalizedAgents = raw.agents.map(agent => ({
+      id: agent.id,
+      skillsDir: agent.skillsDir || agentConfig.skillsDir,
+      installedSkills: Array.isArray(agent.installedSkills) ? agent.installedSkills : [],
+      managedSkills: normalizeManagedArtifacts((agent as { managedSkills?: unknown }).managedSkills),
+      subagentsDir: agent.subagentsDir || agentConfig.subagentsDir,
+      installedSubagents: Array.isArray(agent.installedSubagents) ? agent.installedSubagents : [],
+      managedSubagents: normalizeManagedArtifacts((agent as { managedSubagents?: unknown }).managedSubagents),
+      mcp: normalizeMcp(agent.mcp),
+    }));
 
     return {
       version: raw.version ?? CURRENT_VERSION,
@@ -134,10 +118,21 @@ export async function loadConfig(projectDir: string): Promise<AiFactoryConfig | 
     };
   }
 
+  // Legacy single-agent format
   if (raw.agent) {
+    const agentConfig = getAgentConfig();
     return {
       version: raw.version ?? CURRENT_VERSION,
-      agents: [createAgentInstallation(raw.agent, raw)],
+      agents: [{
+        id: agentConfig.id,
+        skillsDir: raw.skillsDir ?? agentConfig.skillsDir,
+        installedSkills: raw.installedSkills ?? [],
+        managedSkills: {},
+        subagentsDir: agentConfig.subagentsDir,
+        installedSubagents: [],
+        managedSubagents: {},
+        mcp: normalizeMcp(raw.mcp),
+      }],
       extensions: [],
     };
   }
@@ -149,7 +144,7 @@ export async function loadConfig(projectDir: string): Promise<AiFactoryConfig | 
   };
 }
 
-export async function saveConfig(projectDir: string, config: AiFactoryConfig): Promise<void> {
+export async function saveConfig(projectDir: string, config: AppConfig): Promise<void> {
   const configPath = getConfigPath(projectDir);
   await writeJsonFile(configPath, config);
 }

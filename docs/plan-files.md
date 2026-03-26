@@ -2,12 +2,12 @@
 
 # Plan Files
 
-AI Factory uses markdown files to track implementation plans:
+ww-kit uses markdown files to track implementation plans:
 
 | Source | Plan File | After Completion |
 |--------|-----------|------------------|
-| `/aif-plan fast` | `.ai-factory/PLAN.md` | Offer to delete |
-| `/aif-plan full` | `.ai-factory/plans/<branch-name>.md` | Keep (user decides) |
+| `/ww-plan fast` | `.ww-kit/PLAN.md` | Offer to delete |
+| `/ww-plan full` | `.ww-kit/plans/<branch-name>.md` | Keep (user decides) |
 
 ## Artifact Ownership Quick Map
 
@@ -15,30 +15,30 @@ To avoid ownership conflicts, artifact writers are command-scoped:
 
 | Artifact                                                                  | Primary owner command | Notes                                                                                          |
 |---------------------------------------------------------------------------|-----------------------|------------------------------------------------------------------------------------------------|
-| `.ai-factory/DESCRIPTION.md`                                              | `/aif`                | `/aif-implement` may update only when implementation context actually changed                  |
-| `.ai-factory/ARCHITECTURE.md`                                             | `/aif-architecture`   | `/aif-implement` may update structure notes when implementation changes structure              |
-| `.ai-factory/ROADMAP.md`                                                  | `/aif-roadmap`        | `/aif-implement` may mark completed milestones with evidence                                   |
-| `.ai-factory/RULES.md`                                                    | `/aif-rules`          | convention source of truth                                                                     |
-| `.ai-factory/RESEARCH.md`                                                 | `/aif-explore`        | explore-mode writable artifact                                                                 |
-| `.ai-factory/PLAN.md` and `.ai-factory/plans/<branch>.md`                 | `/aif-plan`           | `/aif-improve` refines existing plans                                                          |
-| `.ai-factory/FIX_PLAN.md` and `.ai-factory/patches/*.md`                  | `/aif-fix`            | fix workflow artifacts; context files (including `DESCRIPTION.md`) remain read-only by default |
-| `.ai-factory/skill-context/*`                                             | `/aif-evolve`         | project-specific skill overrides derived from patches                                          |
-| `.ai-factory/evolutions/*.md`, `.ai-factory/evolutions/patch-cursor.json` | `/aif-evolve`         | evolution logs + incremental patch cursor                                                      |
+| `.ww-kit/DESCRIPTION.md`                                              | `/ww`                | `/ww-do` may update only when implementation context actually changed                  |
+| `.ww-kit/ARCHITECTURE.md`                                             | `/ww-arch`   | `/ww-do` may update structure notes when implementation changes structure              |
+| `.ww-kit/ROADMAP.md`                                                  | `/wws-roadmap`        | `/ww-do` may mark completed milestones with evidence                                   |
+| `.ww-kit/RULES.md`                                                    | `/ww-rules`          | convention source of truth                                                                     |
+| `.ww-kit/RESEARCH.md`                                                 | `/ww-explore`        | explore-mode writable artifact                                                                 |
+| `.ww-kit/PLAN.md` and `.ww-kit/plans/<branch>.md`                 | `/ww-plan`           | `/ww-improve` refines existing plans                                                          |
+| `.ww-kit/FIX_PLAN.md` and `.ww-kit/patches/*.md`                  | `/ww-fix`            | fix workflow artifacts; context files (including `DESCRIPTION.md`) remain read-only by default |
+| `.ww-kit/skill-context/*`                                             | `/ww-evolve`         | project-specific skill overrides derived from patches                                          |
+| `.ww-kit/evolutions/*.md`, `.ww-kit/evolutions/patch-cursor.json` | `/ww-evolve`         | evolution logs + incremental patch cursor                                                      |
 
-Quality commands (`/aif-commit`, `/aif-review`, `/aif-verify`) treat these files as read-only context by default.
+Quality commands (`/ww-commit`, `/ww-review`, `/ww-verify`) treat these files as read-only context by default.
 
 ## Research File (Optional)
 
-`.ai-factory/RESEARCH.md` is a persisted exploration artifact. Use it to capture constraints, decisions, and open questions during `/aif-explore` so you can `/clear` and still feed the same context into `/aif-plan`.
+`.ww-kit/RESEARCH.md` is a persisted exploration artifact. Use it to capture constraints, decisions, and open questions during `/ww-explore` so you can `/clear` and still feed the same context into `/ww-plan`.
 
 Typical structure:
-- `## Active Summary (input for /aif-plan)` — compact, up-to-date snapshot
+- `## Active Summary (input for /ww-plan)` — compact, up-to-date snapshot
 - `## Sessions` — append-only history (keep prior notes verbatim)
 
 ## Roadmap Linkage (Optional)
 
-If `.ai-factory/ROADMAP.md` exists, `/aif-plan` may include a `## Roadmap Linkage` section in the plan file.
-This makes milestone alignment explicit for `/aif-implement` completion marking and `/aif-verify` roadmap gates.
+If `.ww-kit/ROADMAP.md` exists, `/ww-plan` may include a `## Roadmap Linkage` section in the plan file.
+This makes milestone alignment explicit for `/ww-do` completion marking and `/ww-verify` roadmap gates.
 
 **Example plan file:**
 
@@ -51,10 +51,10 @@ Created: 2024-01-15
 ## Settings
 - Testing: no
 - Logging: verbose
-- Docs: yes          # /aif-implement shows mandatory docs checkpoint, then routes through /aif-docs
+- Docs: yes          # /ww-do shows mandatory docs checkpoint, then routes through /wws-docs
 
 ## Research Context (optional)
-Source: .ai-factory/RESEARCH.md (Active Summary)
+Source: .ww-kit/RESEARCH.md (Active Summary)
 Goal: Add OAuth + email login
 Constraints: Must support existing session middleware
 Decisions: Use JWT for API auth
@@ -77,20 +77,20 @@ Open questions: Do we need refresh tokens?
 
 ## Self-Improvement Patches
 
-AI Factory has a built-in learning loop. Every bug fix creates a **patch** — a structured knowledge artifact that helps AI avoid the same mistakes in the future.
+ww-kit has a built-in learning loop. Every bug fix creates a **patch** — a structured knowledge artifact that helps AI avoid the same mistakes in the future.
 
 ```
-/aif-fix → finds bug → fixes it → creates patch → /aif-evolve distills new patches into skill-context → smarter future runs
+/ww-fix → finds bug → fixes it → creates patch → /ww-evolve distills new patches into skill-context → smarter future runs
 ```
 
 **How it works:**
 
-1. `/aif-fix` fixes a bug and creates a patch file in `.ai-factory/patches/YYYY-MM-DD-HH.mm.md`
+1. `/ww-fix` fixes a bug and creates a patch file in `.ww-kit/patches/YYYY-MM-DD-HH.mm.md`
 2. Each patch documents: **Problem**, **Root Cause**, **Solution**, **Prevention**, and **Tags**
-3. `/aif-evolve` reads patches incrementally using `.ai-factory/evolutions/patch-cursor.json` (first run reads all)
-4. Workflow skills (`/aif-implement`, `/aif-fix`, `/aif-improve`) prefer skill-context rules and use only limited recent patch fallback when needed
+3. `/ww-evolve` reads patches incrementally using `.ww-kit/evolutions/patch-cursor.json` (first run reads all)
+4. Workflow skills (`/ww-do`, `/ww-fix`, `/ww-improve`) prefer skill-context rules and use only limited recent patch fallback when needed
 
-**Example patch** (`.ai-factory/patches/2026-02-07-14.30.md`):
+**Example patch** (`.ww-kit/patches/2026-02-07-14.30.md`):
 
 ```markdown
 # Null reference in UserProfile when user has no avatar
@@ -116,19 +116,19 @@ Added optional chaining: `user.avatar?.url` with fallback.
 `#null-check` `#react` `#optional-field`
 ```
 
-The more you use `/aif-fix`, the smarter AI becomes on your project. Patches accumulate and create a project-specific knowledge base.
+The more you use `/ww-fix`, the smarter AI becomes on your project. Patches accumulate and create a project-specific knowledge base.
 
-**Periodic evolution** -- run `/aif-evolve` to analyze new patches and automatically improve skills:
+**Periodic evolution** -- run `/ww-evolve` to analyze new patches and automatically improve skills:
 
 ```
-/aif-evolve      # Analyze patches + project → improve all skills
+/ww-evolve      # Analyze patches + project → improve all skills
 ```
 
 This closes the full learning loop: **fix → patch → evolve → better skills → fewer bugs → smarter fixes**.
 
 ## Skill Acquisition Strategy
 
-AI Factory follows this strategy for skills:
+ww-kit follows this strategy for skills:
 
 ```
 For each recommended skill:
@@ -137,8 +137,8 @@ For each recommended skill:
   3. Security scan → python3 security-scan.py <path>
      - BLOCKED? → remove, warn user, skip
      - WARNINGS? → show to user, ask confirmation
-  4. If not found → Generate: /aif-skill-generator <name>
-  5. Has reference docs? → Learn: /aif-skill-generator <url1> [url2]...
+  4. If not found → Generate: /wws-skill <name>
+  5. Has reference docs? → Learn: /wws-skill <url1> [url2]...
 ```
 
 **Never reinvent existing skills** - always check skills.sh first. **Never trust external skills blindly** - always scan before use. When reference documentation is available, use **Learn Mode** to generate skills from real sources.
@@ -146,5 +146,5 @@ For each recommended skill:
 ## See Also
 
 - [Development Workflow](workflow.md) — how plan files fit into the development loop
-- [Core Skills](skills.md) — full reference for `/aif-fix`, `/aif-evolve`, and other skills
+- [Core Skills](skills.md) — full reference for `/ww-fix`, `/ww-evolve`, and other skills
 - [Security](security.md) — how external skills are scanned before use

@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-VALIDATOR="$ROOT_DIR/skills/aif-skill-generator/scripts/validate.sh"
+VALIDATOR="$ROOT_DIR/skills/wws-skill/scripts/validate.sh"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -38,7 +38,7 @@ echo -e "\n${BOLD}=== Validate all skills ===${NC}\n"
 SKILL_WARNINGS=0
 for skill_dir in "$ROOT_DIR"/skills/*/; do
     skill_name=$(basename "$skill_dir")
-    if [[ "$skill_name" != "aif" && "$skill_name" != aif-* ]]; then
+    if [[ "$skill_name" != "ww" && "$skill_name" != ww-* && "$skill_name" != wws-* ]]; then
         continue
     fi
     set +e
@@ -203,10 +203,10 @@ else
     fail "found $DOTTED_NAMES dotted name: fields in skills/"
 fi
 
-# No dotted /aif. invocations in markdown (slash-command context only, not URLs)
-DOTTED_REFS=$(grep -rE "(^|[[:space:]\`\"(>])/aif\\.[a-z]" "$ROOT_DIR/skills/" "$ROOT_DIR/docs/" "$ROOT_DIR/README.md" "$ROOT_DIR/AGENTS.md" --include='*.md' 2>/dev/null | grep -v 'ai-factory\.json' | wc -l | tr -d ' ' || true)
+# No dotted /aif. or /ww. invocations in markdown (slash-command context only, not URLs)
+DOTTED_REFS=$(grep -rE "(^|[[:space:]\`\"(>])/(aif|ww)\\.[a-z]" "$ROOT_DIR/skills/" "$ROOT_DIR/docs/" "$ROOT_DIR/README.md" "$ROOT_DIR/AGENTS.md" --include='*.md' 2>/dev/null | grep -v 'ww-kit\.json' | wc -l | tr -d ' ' || true)
 if [[ "$DOTTED_REFS" -eq 0 ]]; then
-    pass "no dotted /aif.xxx invocations in docs"
+    pass "no dotted slash-command invocations in docs"
 else
     fail "found $DOTTED_REFS dotted invocations in docs"
 fi

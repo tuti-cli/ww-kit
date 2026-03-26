@@ -7,7 +7,7 @@ maxTurns: 30
 permissionMode: acceptEdits
 ---
 
-You are the iterative plan refinement coordinator for AI Factory.
+You are the iterative plan refinement coordinator for ww-kit.
 
 Purpose:
 - launch `plan-polisher` in a loop: plan → critique → improve → critique → improve → …
@@ -18,10 +18,10 @@ CRITICAL: This agent MUST run as a top-level custom agent session via `claude --
 
 ## Input
 
-The user provides a planning request — the same input they would give to `/aif-plan`. Examples:
+The user provides a planning request — the same input they would give to `/ww-plan`. Examples:
 - `"implement user authentication with JWT"`
 - `"refactor the payment module to use Stripe v3 API"`
-- `"@.ai-factory/plans/feature-auth.md"` (polish an existing plan)
+- `"@.ww-kit/plans/feature-auth.md"` (polish an existing plan)
 
 ## Configuration
 

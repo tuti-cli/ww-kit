@@ -37,19 +37,6 @@ export function validateMcpTemplate(template: unknown, key: string): asserts tem
   }
 }
 
-interface OpenCodeMcpServerConfig {
-  type: 'local';
-  command: string[];
-  environment?: Record<string, string>;
-}
-
-interface VsCodeMcpServerConfig {
-  type: 'stdio';
-  command: string;
-  args?: string[];
-  env?: Record<string, string>;
-}
-
 export interface McpOptions {
   github: boolean;
   filesystem: boolean;
@@ -58,45 +45,10 @@ export interface McpOptions {
   playwright: boolean;
 }
 
-type McpSettingsFormat = 'standard' | 'opencode' | 'vscode';
-
 interface McpServerDefinition {
   key: keyof McpOptions;
   templateFile: string;
   instruction: string;
-}
-
-function toOpenCodeFormat(config: McpServerConfig): OpenCodeMcpServerConfig {
-  const command = [config.command, ...(config.args || [])];
-  const result: OpenCodeMcpServerConfig = { type: 'local', command };
-  if (config.env) {
-    result.environment = config.env;
-  }
-  return result;
-}
-
-function normalizeVsCodeEnvValue(value: string): string {
-  const envRefMatch = value.match(/^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$/);
-  if (!envRefMatch) {
-    return value;
-  }
-  return `\${env:${envRefMatch[1]}}`;
-}
-
-function toVsCodeFormat(config: McpServerConfig): VsCodeMcpServerConfig {
-  const result: VsCodeMcpServerConfig = { type: 'stdio', command: config.command };
-
-  if (config.args && config.args.length > 0) {
-    result.args = [...config.args];
-  }
-
-  if (config.env && Object.keys(config.env).length > 0) {
-    result.env = Object.fromEntries(
-      Object.entries(config.env).map(([key, value]) => [key, normalizeVsCodeEnvValue(value)]),
-    );
-  }
-
-  return result;
 }
 
 const MCP_SERVERS: McpServerDefinition[] = [
@@ -150,53 +102,8 @@ async function loadSettings(settingsPath: string): Promise<Record<string, unknow
   return isRecord(parsed) ? parsed : {};
 }
 
-function resolveMcpSettingsFormat(agentId: string): McpSettingsFormat {
-  if (agentId === 'opencode') {
-    return 'opencode';
-  }
-  if (agentId === 'copilot') {
-    return 'vscode';
-  }
-  return 'standard';
-}
-
-function getContainerKey(format: McpSettingsFormat): 'mcp' | 'mcpServers' | 'servers' {
-  if (format === 'opencode') {
-    return 'mcp';
-  }
-  if (format === 'vscode') {
-    return 'servers';
-  }
-  return 'mcpServers';
-}
-
-function applyServerConfig(
-  settings: Record<string, unknown>,
-  format: McpSettingsFormat,
-  key: string,
-  template: McpServerConfig,
-): void {
-  if (format === 'opencode') {
-    ensureNestedRecord(settings, 'mcp')[key] = toOpenCodeFormat(template);
-    return;
-  }
-
-  if (format === 'vscode') {
-    ensureNestedRecord(settings, 'servers')[key] = toVsCodeFormat(template);
-    return;
-  }
-
-  ensureNestedRecord(settings, 'mcpServers')[key] = template;
-}
-
-export async function configureMcp(projectDir: string, options: McpOptions, agentId: string = 'claude'): Promise<string[]> {
-  const agent = getAgentConfig(agentId);
-
-  if (!agent.supportsMcp || !agent.settingsFile) {
-    return [];
-  }
-
-  const format = resolveMcpSettingsFormat(agentId);
+export async function configureMcp(projectDir: string, options: McpOptions): Promise<string[]> {
+  const agent = getAgentConfig();
   const configuredServers: string[] = [];
   const settingsPath = path.join(projectDir, agent.settingsFile);
   const settingsDir = path.dirname(settingsPath);
@@ -216,7 +123,7 @@ export async function configureMcp(projectDir: string, options: McpOptions, agen
       continue;
     }
 
-    applyServerConfig(settings, format, server.key, template);
+    ensureNestedRecord(settings, 'mcpServers')[server.key] = template;
     configuredServers.push(server.key);
   }
 
@@ -236,22 +143,16 @@ export function getMcpInstructions(servers: string[]): string[] {
 
 export async function configureExtensionMcpServers(
   projectDir: string,
-  agentId: string,
   servers: { key: string; template: McpServerConfig }[],
 ): Promise<string[]> {
-  const agent = getAgentConfig(agentId);
-  if (!agent.supportsMcp || !agent.settingsFile) {
-    return [];
-  }
-
-  const format = resolveMcpSettingsFormat(agentId);
+  const agent = getAgentConfig();
   const settingsPath = path.join(projectDir, agent.settingsFile);
   await ensureDir(path.dirname(settingsPath));
   const settings = await loadSettings(settingsPath);
   const configured: string[] = [];
 
   for (const { key, template } of servers) {
-    applyServerConfig(settings, format, key, template);
+    ensureNestedRecord(settings, 'mcpServers')[key] = template;
     configured.push(key);
   }
 
@@ -264,19 +165,12 @@ export async function configureExtensionMcpServers(
 
 export async function removeExtensionMcpServers(
   projectDir: string,
-  agentId: string,
   keys: string[],
 ): Promise<void> {
-  const agent = getAgentConfig(agentId);
-  if (!agent.supportsMcp || !agent.settingsFile) {
-    return;
-  }
-
-  const format = resolveMcpSettingsFormat(agentId);
+  const agent = getAgentConfig();
   const settingsPath = path.join(projectDir, agent.settingsFile);
   const settings = await loadSettings(settingsPath);
-  const containerKey = getContainerKey(format);
-  const container = settings[containerKey];
+  const container = settings['mcpServers'];
 
   if (!isRecord(container)) return;
 

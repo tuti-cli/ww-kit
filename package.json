@@ -1,12 +1,12 @@
 {
-  "name": "ai-factory",
-  "version": "2.8.0",
+  "name": "ww-kit",
+  "version": "3.0.0",
   "type": "module",
-  "description": "CLI tool for automating AI agent context setup in projects",
+  "description": "AI-powered development workflow kit for Claude Code",
   "main": "dist/cli/index.js",
   "types": "dist/cli/index.d.ts",
   "bin": {
-    "ai-factory": "./bin/ai-factory.js"
+    "ww-kit": "./bin/ww-kit.js"
   },
   "scripts": {
     "build": "tsc",
@@ -22,26 +22,13 @@
     "link": "npm run build && npm link"
   },
   "keywords": [
-    "claude",
-    "cursor",
-    "codex",
-    "opencode",
-    "kilocode",
-    "windsurf",
-    "warp",
-    "zencoder",
-    "junie",
-    "qwen",
-    "qwen-code",
-    "gemini",
-    "copilot",
-    "roocode",
-    "antigravity",
     "claude-code",
     "ai",
+    "workflow",
     "skills",
     "automation",
-    "cli"
+    "cli",
+    "ww-kit"
   ],
   "author": "",
   "license": "MIT",

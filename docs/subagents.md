@@ -2,21 +2,21 @@
 
 # Subagents
 
-> **Claude Code only.** AI Factory ships bundled Claude subagents from the package `subagents/` directory and installs them into `.claude/agents/` during `ai-factory init` whenever Claude Code is selected. `ai-factory update` refreshes those managed files and preserves this behavior as Claude-only rather than pretending it is portable across other agents.
+> **Claude Code only.** ww-kit ships bundled Claude subagents from the package `subagents/` directory and installs them into `.claude/agents/` during `ww-kit init` whenever Claude Code is selected. `ww-kit update` refreshes those managed files and preserves this behavior as Claude-only rather than pretending it is portable across other agents.
 
 ## Migration Note
 
-If you have an existing AI Factory project that was initialized before subagent support was added, running `ai-factory update` will automatically install all bundled subagents into `.claude/agents/`. This is intentional migration behavior — `loadConfig()` infers `subagentsDir` from the agent type when it is missing from older configs. No opt-in is required; the subagents are part of the standard AI Factory package for Claude Code.
+If you have an existing ww-kit project that was initialized before subagent support was added, running `ww-kit update` will automatically install all bundled subagents into `.claude/agents/`. This is intentional migration behavior — `loadConfig()` infers `subagentsDir` from the agent type when it is missing from older configs. No opt-in is required; the subagents are part of the standard ww-kit package for Claude Code.
 
-If you already have custom agents in `.claude/agents/`, they will not be touched — AI Factory only manages files listed in `installedSubagents` / `managedSubagents` in `.ai-factory.json`.
+If you already have custom agents in `.claude/agents/`, they will not be touched — ww-kit only manages files listed in `installedSubagents` / `managedSubagents` in `.ww-kit.json`.
 
 ## Why This Exists
 
-AI Factory supports many coding agents, but Claude Code has a native subagent system with isolated context, per-agent tool restrictions, model selection, and project-local agent files.
+ww-kit supports many coding agents, but Claude Code has a native subagent system with isolated context, per-agent tool restrictions, model selection, and project-local agent files.
 
 This repository uses that feature for six narrow purposes:
-- splitting `/aif-loop` into small, single-responsibility roles so the Reflex Loop stays predictable, cheaper to run, and easier to reason about
-- adding one planning specialist that can run `/aif-plan` and `/aif-improve` as a local critique/refinement loop before implementation
+- splitting `/ww-loop` into small, single-responsibility roles so the Reflex Loop stays predictable, cheaper to run, and easier to reason about
+- adding one planning specialist that can run `/ww-plan` and `/ww-improve` as a local critique/refinement loop before implementation
 - adding one planning coordinator that iteratively launches the planning specialist until the plan passes critique or the iteration budget is exhausted
 - adding one implementation coordinator that parses plan dependency graphs, implements single tasks directly with quality sidecars, and dispatches independent tasks in parallel via isolated workers
 - exposing background execution sidecars for top-level Claude agent orchestration
@@ -34,7 +34,7 @@ Current scope is intentionally small:
 - source files live in the package `subagents/` directory
 - managed copies are installed into `.claude/agents/`
 - all of them are project-local, not user-global
-- all of them stay specialized for AI Factory internal workflows
+- all of them stay specialized for ww-kit internal workflows
 
 If you edit these files manually, reload them in Claude Code with `/agents` or by restarting the session.
 
@@ -46,7 +46,7 @@ If you edit these files manually, reload them in Claude Code with `/agents` or b
 | `implement-coordinator` | parse plan dependency graph, implement single tasks directly with quality sidecars, dispatch `implement-worker` workers for parallel tasks, merge results. **Top-level agent only** | `inherit` | `Agent(implement-worker, best-practices-sidecar, commit-preparer, docs-auditor, review-sidecar, security-sidecar), Read, Write, Edit, Glob, Grep, Bash` |
 | `implement-worker` | isolated worktree worker for parallel task execution — implements one task, runs local quality checks, returns results to coordinator | `inherit` | `Read, Write, Edit, Glob, Grep, Bash` |
 | `best-practices-sidecar` | background read-only best-practices sidecar for current implementation scope | `inherit` | `Read, Glob, Grep, Bash` |
-| `plan-polisher` | create or refresh an `/aif-plan` artifact, critique it, and iterate with `/aif-improve` until the plan is stable | `inherit` | `Read, Write, Edit, Glob, Grep, Bash` |
+| `plan-polisher` | create or refresh an `/ww-plan` artifact, critique it, and iterate with `/ww-improve` until the plan is stable | `inherit` | `Read, Write, Edit, Glob, Grep, Bash` |
 | `commit-preparer` | background read-only commit preparation sidecar for current implementation scope | `sonnet` | `Read, Glob, Grep, Bash` |
 | `docs-auditor` | background read-only documentation drift sidecar for current implementation scope | `sonnet` | `Read, Glob, Grep, Bash` |
 | `review-sidecar` | background read-only code review sidecar for current implementation scope | `inherit` | `Read, Glob, Grep, Bash` |
@@ -63,10 +63,10 @@ If you edit these files manually, reload them in Claude Code with `/agents` or b
 
 ## How `plan-polisher` and `plan-coordinator` Fit
 
-`plan-polisher` is not part of `/aif-loop`. It is a self-contained planning worker for Claude Code that:
-- runs an `/aif-plan`-compatible pass directly inside the subagent
+`plan-polisher` is not part of `/ww-loop`. It is a self-contained planning worker for Claude Code that:
+- runs an `/ww-plan`-compatible pass directly inside the subagent
 - critiques the generated plan against implementation-readiness criteria
-- applies at most one `/aif-improve`-compatible refinement pass
+- applies at most one `/ww-improve`-compatible refinement pass
 - returns `needs_further_refinement: yes/no` to the caller
 
 To stay compatible with Claude Code subagent constraints, it does **not** try to spawn nested workers. When the injected skill instructions mention delegated exploration, the agent replaces that with direct `Read`/`Glob`/`Grep`/`Bash` work inside the same context.
@@ -173,7 +173,7 @@ The loop prep workers are also good background candidates and are configured tha
 
 They are read-only, parallel by design, and produce short structured outputs that do not need user interaction.
 
-## How They Fit Into `/aif-loop`
+## How They Fit Into `/ww-loop`
 
 The loop has six logical phases:
 
@@ -300,7 +300,7 @@ claude --agent plan-coordinator "implement user authentication with JWT"
 claude --agent plan-coordinator "implement user authentication with JWT, tests: yes, docs: yes"
 
 # Polish an existing plan
-claude --agent plan-coordinator "@.ai-factory/plans/feature-auth.md"
+claude --agent plan-coordinator "@.ww-kit/plans/feature-auth.md"
 ```
 
 **Implement only (plan already exists):**
@@ -310,26 +310,26 @@ claude --agent plan-coordinator "@.ai-factory/plans/feature-auth.md"
 claude --agent implement-coordinator
 
 # Implement a specific plan file
-claude --agent implement-coordinator "@.ai-factory/plans/feature-auth.md"
+claude --agent implement-coordinator "@.ww-kit/plans/feature-auth.md"
 ```
 
 **Simple single-task implementation (no coordinator needed):**
 
 ```bash
-# Inside a normal Claude Code session, use /aif-implement directly
+# Inside a normal Claude Code session, use /ww-do directly
 ```
 
 ## Why Only Claude For Now
 
-Other supported agents in AI Factory have their own skill formats and extension points, but they do not share Claude Code's `.claude/agents/` subagent mechanism. So this specific setup is intentionally documented as Claude-only instead of pretending it is portable.
+Other supported agents in ww-kit have their own skill formats and extension points, but they do not share Claude Code's `.claude/agents/` subagent mechanism. So this specific setup is intentionally documented as Claude-only instead of pretending it is portable.
 
 If we later build an agent-agnostic abstraction for role-based loop workers, this page should be updated to separate:
 - Claude-native subagents
-- generic AI Factory workflow roles
+- generic ww-kit workflow roles
 - any cross-agent equivalent implementation
 
 ## See Also
 
 - [Reflex Loop](loop.md) - the workflow these agents support
-- [Core Skills](skills.md) - slash command reference including `/aif-loop`
+- [Core Skills](skills.md) - slash command reference including `/ww-loop`
 - [Configuration](configuration.md) - project directories and agent config files

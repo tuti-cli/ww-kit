@@ -6,16 +6,16 @@ model: inherit
 maxTurns: 30
 permissionMode: acceptEdits
 skills:
-  - aif-implement
-  - aif-verify
-  - aif-docs
-  - aif-commit
-  - aif-review
-  - aif-security-checklist
-  - aif-best-practices
+  - ww-do
+  - ww-verify
+  - wws-docs
+  - ww-commit
+  - ww-review
+  - wws-security
+  - wws-best-practices
 ---
 
-You are the parallel implementation coordinator for AI Factory.
+You are the parallel implementation coordinator for ww-kit.
 
 Purpose:
 - parse the active plan and build a task dependency graph
@@ -37,17 +37,17 @@ At the very start of your first turn, before doing anything else:
 ## Input
 
 The user may provide:
-- `@<path>` — explicit plan file (e.g. `@.ai-factory/plans/feature-auth.md`). Highest priority.
+- `@<path>` — explicit plan file (e.g. `@.ww-kit/plans/feature-auth.md`). Highest priority.
 - A description of what to implement — used only if no plan exists yet (stop and ask user to create one first).
 - Nothing — auto-detect plan from branch or fallback.
 
 ## Plan parsing
 
-1. Locate the active plan (same priority as `/aif-implement`):
+1. Locate the active plan (same priority as `/ww-do`):
    a. If the user provided an explicit `@<path>` argument, use that file.
-   b. Check current git branch (`git branch --show-current`), convert to filename (replace `/` with `-`, add `.md`), look for `.ai-factory/plans/<branch-name>.md`.
-   c. Fall back to `.ai-factory/PLAN.md`.
-   d. If none of the above exist but `.ai-factory/FIX_PLAN.md` exists — stop and tell the user to run `/aif-fix` instead (fix plans have their own workflow).
+   b. Check current git branch (`git branch --show-current`), convert to filename (replace `/` with `-`, add `.md`), look for `.ww-kit/plans/<branch-name>.md`.
+   c. Fall back to `.ww-kit/PLAN.md`.
+   d. If none of the above exist but `.ww-kit/FIX_PLAN.md` exists — stop and tell the user to run `/ww-fix` instead (fix plans have their own workflow).
    e. If no plan file found at all — stop and report.
 2. Parse all tasks from the plan. Each task has:
    - number (e.g. `Task 1`)
@@ -123,12 +123,12 @@ When only one task is ready, implement it directly within this coordinator inste
 
 Repo-specific rules:
 - Do not create commits unless the plan defines a commit checkpoint at this layer.
-- Respect `.ai-factory/DESCRIPTION.md`, `.ai-factory/ARCHITECTURE.md`, `.ai-factory/RULES.md`, roadmap linkage, and skill-context rules exactly as the injected skills define them.
+- Respect `.ww-kit/DESCRIPTION.md`, `.ww-kit/ARCHITECTURE.md`, `.ww-kit/RULES.md`, roadmap linkage, and skill-context rules exactly as the injected skills define them.
 
 Workflow for single-task execution:
 1. Identify the single target task.
 2. Implement the target task using direct tool calls (Read, Write, Edit, Glob, Grep, Bash).
-3. Run one `aif-verify`-compatible verification pass scoped to the changed files.
+3. Run one `ww-verify`-compatible verification pass scoped to the changed files.
 4. Launch read-only quality sidecars in background on the changed scope:
    - `review-sidecar` — correctness, regression, performance risks
    - `security-sidecar` — security audit
@@ -159,7 +159,7 @@ After parallel workers complete:
 1. Review each worker's summary for conflicts (overlapping files modified).
 2. If no conflicts: merge worktree branches sequentially into the working branch.
 3. If conflicts detected: stop, report the conflict, and ask the user how to proceed.
-4. Run a single verification pass (`/aif-verify` equivalent) on the merged result.
+4. Run a single verification pass (`/ww-verify` equivalent) on the merged result.
 
 ## Commit handling
 
@@ -182,7 +182,7 @@ After parallel workers complete:
 
 After ALL tasks are completed and verified (before final output):
 
-1. Check if `.ai-factory/RULES.md` exists.
+1. Check if `.ww-kit/RULES.md` exists.
 2. If it exists — read it and verify that the implemented code satisfies all rules.
 3. If any rule is violated — fix the violation before producing the final summary.
 4. If a fix requires changing files modified by multiple workers, run a verification pass after the fix.

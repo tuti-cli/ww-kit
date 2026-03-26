@@ -1,5 +1,5 @@
 import path from 'path';
-import type { AgentInstallation, AiFactoryConfig, ExtensionRecord } from './config.js';
+import type { AgentInstallation, AppConfig, ExtensionRecord } from './config.js';
 import {
   type ExtensionManifest,
   classifyExtensionSource,
@@ -31,7 +31,7 @@ export interface ExtensionAssetInstallResult {
 }
 
 export interface CommitResolvedExtensionOptions {
-  config: AiFactoryConfig;
+  config: AppConfig;
   source: string;
   resolved: ResolvedExtension;
   log?: (level: 'info' | 'warn', message: string) => void;
@@ -56,38 +56,25 @@ class ExtensionAssetInstallError extends Error {
   }
 }
 
-/**
- * Install base skills on all agents.
- */
 export async function installSkillsForAllAgents(
   projectDir: string,
   agents: AgentInstallation[],
   skills: string[],
 ): Promise<void> {
-  for (const agent of agents) {
-    await installSkills({ projectDir, skillsDir: agent.skillsDir, skills, agentId: agent.id });
-  }
+  const agent = agents[0];
+  await installSkills({ projectDir, skillsDir: agent.skillsDir, skills });
 }
 
-/**
- * Remove extension skills from all agents. Returns per-agent removed lists.
- */
 export async function removeSkillsForAllAgents(
   projectDir: string,
   agents: AgentInstallation[],
   skillNames: string[],
 ): Promise<Map<string, string[]>> {
-  const results = new Map<string, string[]>();
-  for (const agent of agents) {
-    const removed = await removeExtensionSkills(projectDir, agent, skillNames);
-    results.set(agent.id, removed);
-  }
-  return results;
+  const agent = agents[0];
+  const removed = await removeExtensionSkills(projectDir, agent, skillNames);
+  return new Map([[agent.id, removed]]);
 }
 
-/**
- * Install extension skills on all agents. Returns per-agent installed lists.
- */
 export async function installExtensionSkillsForAllAgents(
   projectDir: string,
   agents: AgentInstallation[],
@@ -95,17 +82,11 @@ export async function installExtensionSkillsForAllAgents(
   skillPaths: string[],
   nameOverrides?: Record<string, string>,
 ): Promise<Map<string, string[]>> {
-  const results = new Map<string, string[]>();
-  for (const agent of agents) {
-    const installed = await installExtensionSkills(projectDir, agent, extensionDir, skillPaths, nameOverrides);
-    results.set(agent.id, installed);
-  }
-  return results;
+  const agent = agents[0];
+  const installed = await installExtensionSkills(projectDir, agent, extensionDir, skillPaths, nameOverrides);
+  return new Map([[agent.id, installed]]);
 }
 
-/**
- * Collect all replaced skills from extensions, optionally excluding one extension by name.
- */
 export function collectReplacedSkills(extensions: ExtensionRecord[], excludeName?: string): Set<string> {
   const result = new Set<string>();
   for (const ext of extensions) {
@@ -117,9 +98,6 @@ export function collectReplacedSkills(extensions: ExtensionRecord[], excludeName
   return result;
 }
 
-/**
- * Ensure a new/updated extension does not claim a base skill already replaced by another extension.
- */
 export function assertNoReplacementConflicts(
   extensions: ExtensionRecord[],
   manifest: ExtensionManifest,
@@ -139,9 +117,6 @@ export function assertNoReplacementConflicts(
   }
 }
 
-/**
- * Restore base skills that were previously replaced, filtering out skills still replaced by other extensions.
- */
 export async function restoreBaseSkills(
   projectDir: string,
   agents: AgentInstallation[],
@@ -156,9 +131,6 @@ export async function restoreBaseSkills(
   return toRestore;
 }
 
-/**
- * Remove the previously installed state for an extension before reapplying its refreshed manifest.
- */
 export async function removePreviousExtensionState(
   projectDir: string,
   agents: AgentInstallation[],
@@ -170,9 +142,7 @@ export async function removePreviousExtensionState(
 
   if (oldManifest?.mcpServers?.length) {
     const mcpKeys = oldManifest.mcpServers.map(server => server.key);
-    for (const agent of agents) {
-      await removeExtensionMcpServers(projectDir, agent.id, mcpKeys);
-    }
+    await removeExtensionMcpServers(projectDir, mcpKeys);
   }
 
   if (oldRecord?.replacedSkills?.length) {
@@ -196,9 +166,7 @@ async function cleanupPartialExtensionState(
 
   if (manifest.mcpServers?.length) {
     const mcpKeys = manifest.mcpServers.map(server => server.key);
-    for (const agent of agents) {
-      await removeExtensionMcpServers(projectDir, agent.id, mcpKeys);
-    }
+    await removeExtensionMcpServers(projectDir, mcpKeys);
   }
 
   const replacedSkills = partialAssetInstall?.replacedSkills ?? [];
@@ -246,28 +214,20 @@ async function rollbackFailedExtensionInstall(
   await removeDirectory(context.extensionDir);
 }
 
-/**
- * Strip extension injections from all agents. Uses manifest if available, falls back to name-based scan.
- */
 export async function stripInjectionsForAllAgents(
   projectDir: string,
   agents: AgentInstallation[],
   extensionName: string,
   manifest?: ExtensionManifest | null,
 ): Promise<void> {
-  for (const agent of agents) {
-    if (manifest) {
-      await stripAllExtensionInjections(projectDir, agent, extensionName, manifest);
-    } else {
-      await stripInjectionsByExtensionName(projectDir, agent, extensionName);
-    }
+  const agent = agents[0];
+  if (manifest) {
+    await stripAllExtensionInjections(projectDir, agent, extensionName, manifest);
+  } else {
+    await stripInjectionsByExtensionName(projectDir, agent, extensionName);
   }
 }
 
-/**
- * Remove custom (non-replacement) skills from all agents based on the manifest.
- * Returns the list of custom skill paths that were targeted for removal.
- */
 export async function removeCustomSkillsForAllAgents(
   projectDir: string,
   agents: AgentInstallation[],
@@ -279,15 +239,13 @@ export async function removeCustomSkillsForAllAgents(
   return removeSkillsForAllAgents(projectDir, agents, customSkills);
 }
 
-/**
- * Install replacement skills, custom skills, injections, and MCP config for an extension.
- */
 export async function installExtensionAssetsForAllAgents(
   projectDir: string,
   agents: AgentInstallation[],
   extensionDir: string,
   manifest: ExtensionManifest,
 ): Promise<ExtensionAssetInstallResult> {
+  const agent = agents[0];
   const partialResult: ExtensionAssetInstallResult = {
     replacedSkills: [],
     replacementOutcomes: [],
@@ -302,69 +260,44 @@ export async function installExtensionAssetsForAllAgents(
     if (manifest.replaces && Object.keys(manifest.replaces).length > 0) {
       const nameOverrides: Record<string, string> = { ...manifest.replaces };
       const replacePaths = Object.keys(manifest.replaces);
-      const perAgentResults = new Map<string, number>();
 
-      for (const agent of agents) {
-        const installed = await installExtensionSkills(projectDir, agent, extensionDir, replacePaths, nameOverrides);
-        for (const name of installed) {
-          perAgentResults.set(name, (perAgentResults.get(name) ?? 0) + 1);
-        }
-      }
+      const installed = await installExtensionSkills(projectDir, agent, extensionDir, replacePaths, nameOverrides);
+      const installedSet = new Set(installed);
 
-      const agentCount = agents.length;
       for (const [extSkillPath, baseSkillName] of Object.entries(manifest.replaces)) {
         replacesPaths.add(extSkillPath);
-        const successCount = perAgentResults.get(baseSkillName) ?? 0;
 
-        if (successCount === agentCount) {
+        if (installedSet.has(baseSkillName)) {
           partialResult.replacedSkills.push(baseSkillName);
           partialResult.replacementOutcomes.push({
             baseSkillName,
             extensionSkillPath: extSkillPath,
             status: 'installed',
-            successCount,
-            agentCount,
+            successCount: 1,
+            agentCount: 1,
           });
-          continue;
-        }
-
-        if (successCount > 0) {
-          await removeSkillsForAllAgents(projectDir, agents, [baseSkillName]);
-          await restoreBaseSkills(projectDir, agents, [baseSkillName], new Set());
+        } else {
           partialResult.replacementOutcomes.push({
             baseSkillName,
             extensionSkillPath: extSkillPath,
-            status: 'rolled-back',
-            successCount,
-            agentCount,
+            status: 'preserved-base',
+            successCount: 0,
+            agentCount: 1,
           });
-          continue;
         }
-
-        partialResult.replacementOutcomes.push({
-          baseSkillName,
-          extensionSkillPath: extSkillPath,
-          status: 'preserved-base',
-          successCount,
-          agentCount,
-        });
       }
     }
 
     if (manifest.skills?.length) {
       const nonReplacementSkills = manifest.skills.filter(skillPath => !replacesPaths.has(skillPath));
       if (nonReplacementSkills.length > 0) {
-        const results = await installExtensionSkillsForAllAgents(projectDir, agents, extensionDir, nonReplacementSkills);
-        for (const [agentId, installed] of results) {
-          partialResult.customSkillInstalls.set(agentId, installed);
-        }
+        const installed = await installExtensionSkills(projectDir, agent, extensionDir, nonReplacementSkills);
+        partialResult.customSkillInstalls.set(agent.id, installed);
       }
     }
 
     if (manifest.injections?.length) {
-      for (const agent of agents) {
-        partialResult.injectionCount += await applySingleExtensionInjections(projectDir, agent, extensionDir, manifest);
-      }
+      partialResult.injectionCount += await applySingleExtensionInjections(projectDir, agent, extensionDir, manifest);
     }
 
     if (manifest.mcpServers?.length) {
@@ -382,13 +315,11 @@ export async function installExtensionAssetsForAllAgents(
 
         validateMcpTemplate(template, server.key);
 
-        for (const agent of agents) {
-          const configured = await configureExtensionMcpServers(projectDir, agent.id, [
-            { key: server.key, template },
-          ]);
-          if (configured.length > 0 && !partialResult.configuredMcpServers.includes(server.key)) {
-            partialResult.configuredMcpServers.push(server.key);
-          }
+        const configured = await configureExtensionMcpServers(projectDir, [
+          { key: server.key, template },
+        ]);
+        if (configured.length > 0 && !partialResult.configuredMcpServers.includes(server.key)) {
+          partialResult.configuredMcpServers.push(server.key);
         }
       }
     }
@@ -458,8 +389,6 @@ export async function commitResolvedExtension(
   for (const outcome of assetInstall.replacementOutcomes) {
     if (outcome.status === 'installed') {
       log('info', `Replaced skill "${outcome.baseSkillName}" with "${path.basename(outcome.extensionSkillPath)}"`);
-    } else if (outcome.status === 'rolled-back') {
-      log('warn', `Replacement "${outcome.baseSkillName}" only installed on ${outcome.successCount}/${outcome.agentCount} agents - rolled back, base skill restored`);
     } else {
       log('warn', `Failed to replace skill "${outcome.baseSkillName}" - base skill preserved`);
     }
@@ -552,7 +481,7 @@ async function checkExtensionNeedsRefresh(
 
 export async function refreshExtensions(
   projectDir: string,
-  config: AiFactoryConfig,
+  config: AppConfig,
   options?: {
     targetNames?: string[];
     force?: boolean;

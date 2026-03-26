@@ -274,7 +274,7 @@ export function validateSkillName(name: string): void {
 }
 
 export function getExtensionsDir(projectDir: string): string {
-  return path.join(projectDir, '.ai-factory', EXTENSIONS_DIR);
+  return path.join(projectDir, '.ww-kit', EXTENSIONS_DIR);
 }
 
 export async function loadExtensionManifest(extensionDir: string): Promise<ExtensionManifest | null> {

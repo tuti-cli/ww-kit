@@ -6,97 +6,97 @@
 
 These skills form the core development loop. See [Development Workflow](workflow.md) for the full diagram and how they connect.
 
-### `/aif-explore [topic or plan name]`
+### `/ww-explore [topic or plan name]`
 Explore ideas, constraints, and trade-offs before planning:
 ```
-/aif-explore real-time collaboration
-/aif-explore the auth system is getting unwieldy
-/aif-explore add-auth-system
+/ww-explore real-time collaboration
+/ww-explore the auth system is getting unwieldy
+/ww-explore add-auth-system
 ```
 - Uses a thinking-partner mode: open questions, option mapping, and ASCII visualization
-- Reads project context from `.ai-factory/DESCRIPTION.md`, `ARCHITECTURE.md`, `RULES.md`, `.ai-factory/RESEARCH.md`, and active plan files when present
-- Does **not** implement code in this mode; when direction is clear, move to `/aif-plan`
-- Can optionally persist exploration context to `.ai-factory/RESEARCH.md` so you can `/clear` and still feed results into `/aif-plan`
+- Reads project context from `.ww-kit/DESCRIPTION.md`, `ARCHITECTURE.md`, `RULES.md`, `.ww-kit/RESEARCH.md`, and active plan files when present
+- Does **not** implement code in this mode; when direction is clear, move to `/ww-plan`
+- Can optionally persist exploration context to `.ww-kit/RESEARCH.md` so you can `/clear` and still feed results into `/ww-plan`
 - Best when the problem is still fuzzy: requirements unclear, trade-offs unresolved, or you want to inspect the codebase before choosing a direction
 
-### `/aif-plan [fast|full] <description>`
+### `/ww-plan [fast|full] <description>`
 Plans implementation for a feature or task:
 ```
-/aif-plan Add user authentication with OAuth       # Asks which mode
-/aif-plan fast Add product search API              # Quick plan, no branch
-/aif-plan full Add user authentication with OAuth  # Git branch + full plan
+/ww-plan Add user authentication with OAuth       # Asks which mode
+/ww-plan fast Add product search API              # Quick plan, no branch
+/ww-plan full Add user authentication with OAuth  # Git branch + full plan
 ```
 
 Two modes:
-- **Fast** — no git branch, saves plan to `.ai-factory/PLAN.md`, asks fewer questions
-- **Full** — creates git branch (`feature/user-authentication`), asks about testing/logging/docs policy, saves plan to `.ai-factory/plans/<branch>.md`
+- **Fast** — no git branch, saves plan to `.ww-kit/PLAN.md`, asks fewer questions
+- **Full** — creates git branch (`feature/user-authentication`), asks about testing/logging/docs policy, saves plan to `.ww-kit/plans/<branch>.md`
 
 Both modes explore your codebase for patterns, create tasks with dependencies, and include commit checkpoints for 5+ tasks.
 
-If `.ai-factory/RESEARCH.md` exists, `/aif-plan` reads the `Active Summary` and includes it as `Research Context` in the plan.
+If `.ww-kit/RESEARCH.md` exists, `/ww-plan` reads the `Active Summary` and includes it as `Research Context` in the plan.
 
-If `.ai-factory/ROADMAP.md` exists, `/aif-plan` may also capture a `Roadmap Linkage` section (milestone name + brief rationale) to make milestone alignment explicit.
+If `.ww-kit/ROADMAP.md` exists, `/ww-plan` may also capture a `Roadmap Linkage` section (milestone name + brief rationale) to make milestone alignment explicit.
 
 **Parallel mode** — work on multiple features simultaneously using `git worktree`:
 ```
-/aif-plan full --parallel Add Stripe checkout
+/ww-plan full --parallel Add Stripe checkout
 ```
 - Creates a separate working directory (`../my-project-feature-stripe-checkout`)
-- Copies AI context files (`.ai-factory/`, `.claude/`, `CLAUDE.md`)
+- Copies AI context files (`.ww-kit/`, `.claude/`, `CLAUDE.md`)
 - Each feature gets its own Claude Code session — no branch switching, no conflicts
 
 **Manage parallel features:**
 ```
-/aif-plan --list                          # Show all active worktrees
-/aif-plan --cleanup feature/stripe-checkout # Remove worktree and branch
+/ww-plan --list                          # Show all active worktrees
+/ww-plan --cleanup feature/stripe-checkout # Remove worktree and branch
 ```
 
-### `/aif-roadmap [check | vision or requirements]`
+### `/wws-roadmap [check | vision or requirements]`
 Creates or updates a strategic project roadmap:
 ```
-/aif-roadmap                              # Analyze project and create roadmap
-/aif-roadmap SaaS for project management  # Create roadmap from vision
-/aif-roadmap                              # Update existing roadmap (interactive)
-/aif-roadmap check                        # Auto-scan codebase, mark done milestones
+/wws-roadmap                              # Analyze project and create roadmap
+/wws-roadmap SaaS for project management  # Create roadmap from vision
+/wws-roadmap                              # Update existing roadmap (interactive)
+/wws-roadmap check                        # Auto-scan codebase, mark done milestones
 ```
-- Reads `.ai-factory/DESCRIPTION.md` + `ARCHITECTURE.md` for context
-- **First run** — explores codebase, asks for major goals, generates `.ai-factory/ROADMAP.md`
+- Reads `.ww-kit/DESCRIPTION.md` + `ARCHITECTURE.md` for context
+- **First run** — explores codebase, asks for major goals, generates `.ww-kit/ROADMAP.md`
 - **Subsequent runs** — review progress, add milestones, reprioritize, mark completed
 - **`check`** — automated progress scan: analyzes codebase for evidence of completed milestones, reports done/partial/not started, marks completed with confirmation
-- Milestones are high-level goals (not granular tasks — that's `/aif-plan`)
-- `/aif-implement` automatically marks roadmap milestones done when work completes
+- Milestones are high-level goals (not granular tasks — that's `/ww-plan`)
+- `/ww-do` automatically marks roadmap milestones done when work completes
 
-### `/aif-improve [--list] [@plan-file] [prompt]`
+### `/ww-improve [--list] [@plan-file] [prompt]`
 Refine an existing plan with a second iteration:
 ```
-/aif-improve                                    # Auto-review: find gaps, missing tasks, wrong deps
-/aif-improve --list                             # Show available plans only (no refinement)
-/aif-improve @my-custom-plan.md                 # Improve an explicit plan file
-/aif-improve добавь валидацию и обработку ошибок # Improve based on specific feedback
+/ww-improve                                    # Auto-review: find gaps, missing tasks, wrong deps
+/ww-improve --list                             # Show available plans only (no refinement)
+/ww-improve @my-custom-plan.md                 # Improve an explicit plan file
+/ww-improve добавь валидацию и обработку ошибок # Improve based on specific feedback
 ```
-- Plan source priority: `@plan-file` argument, then branch-based `.ai-factory/plans/<branch>.md`, then `.ai-factory/PLAN.md`, then `.ai-factory/FIX_PLAN.md`
+- Plan source priority: `@plan-file` argument, then branch-based `.ww-kit/plans/<branch>.md`, then `.ww-kit/PLAN.md`, then `.ww-kit/FIX_PLAN.md`
 - `--list` mode is read-only: shows available plan files and exits
-- Performs deeper codebase analysis than the initial `/aif-plan` planning
+- Performs deeper codebase analysis than the initial `/ww-plan` planning
 - Finds missing tasks (migrations, configs, middleware)
 - Fixes task dependencies and descriptions
 - Removes redundant tasks
 - Shows improvement report and asks for approval before applying
-- If no plan found — suggests running `/aif-plan` (feature/task) or `/aif-fix` (bugfix) first
+- If no plan found — suggests running `/ww-plan` (feature/task) or `/ww-fix` (bugfix) first
 
-### `/aif-loop [new|resume|status|stop|list|history|clean] [task or alias]`
+### `/ww-loop [new|resume|status|stop|list|history|clean] [task or alias]`
 Runs a strict iterative Reflex Loop with phase-based execution and quality gates:
 ```
-/aif-loop new OpenAPI 3.1 spec + DDD notes + JSON examples
-/aif-loop resume
-/aif-loop status
-/aif-loop stop
-/aif-loop list
-/aif-loop history courses-api-ddd
-/aif-loop clean courses-api-ddd
+/ww-loop new OpenAPI 3.1 spec + DDD notes + JSON examples
+/ww-loop resume
+/ww-loop status
+/ww-loop stop
+/ww-loop list
+/ww-loop history courses-api-ddd
+/ww-loop clean courses-api-ddd
 ```
 - Uses 6 phases: PLAN -> PRODUCE||PREPARE -> EVALUATE -> CRITIQUE -> REFINE (PRODUCE and PREPARE run in parallel)
 - Evaluation uses weighted rules with score formula and severity levels (`fail`, `warn`, `info`)
-- Persists state between sessions in `.ai-factory/evolution/`:
+- Persists state between sessions in `.ww-kit/evolution/`:
   - `current.json` (active loop pointer to current run)
   - `<alias>/run.json` (single source of truth for current state)
   - `<alias>/history.jsonl` (append-only event log)
@@ -108,146 +108,146 @@ Runs a strict iterative Reflex Loop with phase-based execution and quality gates
 - If stopped by `iteration_limit` with unmet criteria, final summary includes distance-to-success (threshold gap + remaining fail-rule blockers)
 - Full protocol and schemas: [Reflex Loop](loop.md)
 
-### `/aif-implement`
+### `/ww-do`
 Executes the plan:
 ```
-/aif-implement        # Continue from where you left off
-/aif-implement --list # Show available plans only (no execution)
-/aif-implement @my-custom-plan.md # Execute using an explicit plan file
-/aif-implement 5      # Start from task #5
-/aif-implement status # Check progress
+/ww-do        # Continue from where you left off
+/ww-do --list # Show available plans only (no execution)
+/ww-do @my-custom-plan.md # Execute using an explicit plan file
+/ww-do 5      # Start from task #5
+/ww-do status # Check progress
 ```
-- **Reads skill-context first** (`.ai-factory/skill-context/aif-implement/SKILL.md`) and only uses limited recent patch fallback when needed
-- Finds plan file (`@plan-file` if provided; otherwise branch-based `.ai-factory/plans/<branch>.md`, then `.ai-factory/PLAN.md`, then `.ai-factory/FIX_PLAN.md` → redirects to `/aif-fix`)
+- **Reads skill-context first** (`.ww-kit/skill-context/ww-do/SKILL.md`) and only uses limited recent patch fallback when needed
+- Finds plan file (`@plan-file` if provided; otherwise branch-based `.ww-kit/plans/<branch>.md`, then `.ww-kit/PLAN.md`, then `.ww-kit/FIX_PLAN.md` → redirects to `/ww-fix`)
 - `--list` mode is read-only: shows available plan files and exits
 - Executes tasks one by one
 - Prompts for commits at checkpoints
 - Docs policy after completion:
   - `Docs: yes` → mandatory documentation checkpoint (update docs / create feature page / skip)
   - `Docs: no` or unset → `WARN [docs]` only (no mandatory checkpoint)
-  - Docs updates are always routed through `/aif-docs`
-- Offers to delete .ai-factory/PLAN.md when done
+  - Docs updates are always routed through `/wws-docs`
+- Offers to delete .ww-kit/PLAN.md when done
 
-### `/aif-verify [--strict]`
+### `/ww-verify [--strict]`
 Verifies completed implementation against the plan:
 ```
-/aif-verify          # Check all tasks were fully implemented
-/aif-verify --strict # Strict mode — zero tolerance before merge
+/ww-verify          # Check all tasks were fully implemented
+/ww-verify --strict # Strict mode — zero tolerance before merge
 ```
 
-**Optional step after `/aif-implement`** — when implementation finishes, you'll be asked if you want to verify.
+**Optional step after `/ww-do`** — when implementation finishes, you'll be asked if you want to verify.
 
 - **Task completion audit** — goes through every task in the plan, uses `Glob`/`Grep`/`Read` to confirm the code actually implements each requirement. Reports `COMPLETE`, `PARTIAL`, or `NOT FOUND` per task
 - **Build & test check** — runs the project's build command, test suite, and linters on changed files
 - **Consistency checks** — searches for leftover `TODO`/`FIXME`/`HACK`, undocumented environment variables, missing dependencies, plan-vs-code naming drift
 - **Context gates (read-only)** — checks architecture/roadmap/rules alignment before final status; missing optional roadmap/rules files are warnings
-- **Issue remediation** — if issues found, first suggests `/aif-fix <issue summary>` (recommended), with optional direct fix in-session
-- **Follow-up suggestions** — if all green, suggests `/aif-security-checklist`, `/aif-review`, then `/aif-commit`
+- **Issue remediation** — if issues found, first suggests `/ww-fix <issue summary>` (recommended), with optional direct fix in-session
+- **Follow-up suggestions** — if all green, suggests `/wws-security`, `/ww-review`, then `/ww-commit`
 
 **Strict mode** (`--strict`) is recommended before merging: requires all tasks complete, build passing, tests passing, lint clean, zero TODOs in changed files, and passing architecture/rules/roadmap gates. For `feat`/`fix`/`perf`, missing roadmap milestone linkage is reported as a warning, not a failure.
 
-### `/aif-fix [bug description]`
+### `/ww-fix [bug description]`
 Bug fix with optional plan-first mode:
 ```
-/aif-fix TypeError: Cannot read property 'name' of undefined
+/ww-fix TypeError: Cannot read property 'name' of undefined
 ```
 - Asks to choose mode: **Fix now** (immediate) or **Plan first** (review before fixing)
 - Investigates codebase to find root cause
 - Applies fix WITH logging (`[FIX]` prefix for easy filtering)
 - Suggests test coverage for the bug
-- Creates a **self-improvement patch** in `.ai-factory/patches/`
+- Creates a **self-improvement patch** in `.ww-kit/patches/`
 
 **Plan-first mode** — for complex bugs or when you want to review the approach:
 ```
-/aif-fix Something is broken    # Choose "Plan first" when asked
+/ww-fix Something is broken    # Choose "Plan first" when asked
 ```
-- Investigates the codebase, creates `.ai-factory/FIX_PLAN.md` with analysis, fix steps, risks
+- Investigates the codebase, creates `.ww-kit/FIX_PLAN.md` with analysis, fix steps, risks
 - Stops after creating the plan — you review it at your own pace
 - When ready, run without arguments to execute the plan:
 ```
-/aif-fix                        # Detects FIX_PLAN.md, executes the fix, deletes the plan
+/ww-fix                        # Detects FIX_PLAN.md, executes the fix, deletes the plan
 ```
 
-### `/aif-evolve [skill-name|"all"]`
+### `/ww-evolve [skill-name|"all"]`
 Self-improve skills based on project experience:
 ```
-/aif-evolve          # Evolve all skills
-/aif-evolve fix      # Evolve only /aif-fix skill
-/aif-evolve all      # Evolve all skills
+/ww-evolve          # Evolve all skills
+/ww-evolve fix      # Evolve only /ww-fix skill
+/ww-evolve all      # Evolve all skills
 ```
-- Reads patches incrementally from `.ai-factory/patches/` using `.ai-factory/evolutions/patch-cursor.json` (first run reads all)
+- Reads patches incrementally from `.ww-kit/patches/` using `.ww-kit/evolutions/patch-cursor.json` (first run reads all)
 - Analyzes project tech stack, conventions, and codebase patterns
 - Identifies gaps in existing skills (missing guards, tech-specific pitfalls)
 - Proposes targeted improvements with user approval
-- Writes project-specific overrides to `.ai-factory/skill-context/<skill>/SKILL.md` (skills treat these as higher-priority rules)
-- Saves evolution log to `.ai-factory/evolutions/`
-- The more `/aif-fix` patches you accumulate, the smarter `/aif-evolve` becomes
+- Writes project-specific overrides to `.ww-kit/skill-context/<skill>/SKILL.md` (skills treat these as higher-priority rules)
+- Saves evolution log to `.ww-kit/evolutions/`
+- The more `/ww-fix` patches you accumulate, the smarter `/ww-evolve` becomes
 
 ---
 
 ## Utility Skills
 
-### `/aif`
+### `/ww`
 Analyzes your project and sets up context:
 - Scans project files to understand the codebase
 - Searches [skills.sh](https://skills.sh) for relevant skills
-- Generates custom skills via `/aif-skill-generator`
+- Generates custom skills via `/wws-skill`
 - Configures MCP servers
-- Generates architecture document via `/aif-architecture`
+- Generates architecture document via `/ww-arch`
 
 When called with a description:
 ```
-/aif project management tool with GitHub integration
+/ww project management tool with GitHub integration
 ```
-- Creates `.ai-factory/DESCRIPTION.md` with enhanced project specification
-- Creates `.ai-factory/ARCHITECTURE.md` with architecture decisions and guidelines
+- Creates `.ww-kit/DESCRIPTION.md` with enhanced project specification
+- Creates `.ww-kit/ARCHITECTURE.md` with architecture decisions and guidelines
 - Transforms your idea into a structured, professional description
 
 **Does NOT implement your project** - only sets up context.
 
-### `/aif-grounded <question or task>`
+### `/ww-grounded <question or task>`
 Reliability gate that prevents guessing:
 ```
-/aif-grounded Explain how feature flags work in this codebase
-/aif-grounded Update dependencies to the latest secure versions (no assumptions)
+/ww-grounded Explain how feature flags work in this codebase
+/ww-grounded Update dependencies to the latest secure versions (no assumptions)
 ```
 - Only provides a final answer if confidence is **100/100** based on evidence (repo files, command output, provided docs)
 - If confidence is < 100, returns **INSUFFICIENT INFORMATION** with a concrete checklist of what’s needed to reach 100
 - Forces verification for changeable facts (“latest”, “current”, version-specific behavior)
 - Best when the task is already clear but the answer must be strictly verified: high-stakes questions, version-sensitive facts, or any prompt that says “no assumptions”
 
-#### `/aif-explore` vs `/aif-grounded`
+#### `/ww-explore` vs `/ww-grounded`
 
 | Skill | Use it for | Output style | If things are unclear |
 |-------|------------|--------------|------------------------|
-| `/aif-explore` | discovery, requirement shaping, trade-off discussion, repo investigation before planning | open-ended thinking partner | keeps exploring, reframing, and comparing options |
-| `/aif-grounded` | evidence-only answers, strict verification, high-stakes or changeable facts | confidence-gated answer with explicit evidence | stops and returns `INSUFFICIENT INFORMATION` |
+| `/ww-explore` | discovery, requirement shaping, trade-off discussion, repo investigation before planning | open-ended thinking partner | keeps exploring, reframing, and comparing options |
+| `/ww-grounded` | evidence-only answers, strict verification, high-stakes or changeable facts | confidence-gated answer with explicit evidence | stops and returns `INSUFFICIENT INFORMATION` |
 
 Typical sequence when both are useful:
-1. `/aif-explore` — figure out what problem you are really solving.
-2. `/aif-grounded` — verify the important claims or current-state facts.
-3. `/aif-plan` — turn the clarified, verified direction into executable tasks.
+1. `/ww-explore` — figure out what problem you are really solving.
+2. `/ww-grounded` — verify the important claims or current-state facts.
+3. `/ww-plan` — turn the clarified, verified direction into executable tasks.
 
 For the workflow view of where these fit, see [Development Workflow](workflow.md).
 
-### `/aif-architecture [clean|ddd|microservices|monolith|layers]`
+### `/ww-arch [clean|ddd|microservices|monolith|layers]`
 Generates architecture guidelines tailored to your project:
 ```
-/aif-architecture           # Analyze project and recommend
-/aif-architecture clean     # Use Clean Architecture
-/aif-architecture monolith  # Use Modular Monolith
+/ww-arch           # Analyze project and recommend
+/ww-arch clean     # Use Clean Architecture
+/ww-arch monolith  # Use Modular Monolith
 ```
-- Reads `.ai-factory/DESCRIPTION.md` for project context
+- Reads `.ww-kit/DESCRIPTION.md` for project context
 - Recommends architecture pattern based on team size, domain complexity, and tech stack
-- Generates `.ai-factory/ARCHITECTURE.md` with folder structure, dependency rules, code examples
+- Generates `.ww-kit/ARCHITECTURE.md` with folder structure, dependency rules, code examples
 - All examples adapted to your project's language and framework
-- Called automatically by `/aif` during setup, but can also be used standalone
+- Called automatically by `/ww` during setup, but can also be used standalone
 
-### `/aif-docs [--web]`
+### `/wws-docs [--web]`
 Generates and maintains project documentation:
 ```
-/aif-docs          # Generate or improve documentation
-/aif-docs --web    # Also generate HTML version in docs-html/
+/wws-docs          # Generate or improve documentation
+/wws-docs --web    # Also generate HTML version in docs-html/
 ```
 
 **Smart detection** — adapts to your project's current state:
@@ -257,7 +257,7 @@ Generates and maintains project documentation:
 
 **Scattered .md cleanup** — finds loose markdown files in your project root (CONTRIBUTING.md, ARCHITECTURE.md, SETUP.md, DEPLOYMENT.md, etc.) and proposes consolidating them into a structured `docs/` directory. No more documentation scattered across 10 root-level files.
 
-**Stays in sync with your code** — when `/aif-plan full` asks for docs policy and you choose `Docs: yes`, `/aif-implement` shows a mandatory docs checkpoint and routes changes through `/aif-docs`. If `Docs: no` (or unset), `/aif-implement` emits `WARN [docs]` so potential drift is visible without blocking the flow.
+**Stays in sync with your code** — when `/ww-plan full` asks for docs policy and you choose `Docs: yes`, `/ww-do` shows a mandatory docs checkpoint and routes changes through `/wws-docs`. If `Docs: no` (or unset), `/ww-do` emits `WARN [docs]` so potential drift is visible without blocking the flow.
 
 **Documentation website** — `--web` flag generates a complete static HTML site in `docs-html/` with navigation bar, dark mode support, and clean typography. Ready to host on GitHub Pages or any static hosting.
 
@@ -266,11 +266,11 @@ Generates and maintains project documentation:
 - Technical review — verifies links, structure, code examples, no content loss
 - Readability review — "new user eyes" checklist: is it clear, scannable, jargon-free?
 
-### `/aif-dockerize [--audit]`
+### `/wws-docker [--audit]`
 Generates, enhances, or audits Docker configuration for your project:
 ```
-/aif-dockerize          # Auto-detect mode based on existing files
-/aif-dockerize --audit  # Force audit mode on existing Docker files
+/wws-docker          # Auto-detect mode based on existing files
+/wws-docker --audit  # Force audit mode on existing Docker files
 ```
 
 **Three modes** (auto-detected):
@@ -293,18 +293,18 @@ Generates, enhances, or audits Docker configuration for your project:
 - Resource limits (CPU, memory, PIDs), secrets management, image pinning
 - Over-engineering check (don't add services the code doesn't use)
 
-After completion, suggests `/aif-build-automation` and `/aif-docs`.
+After completion, suggests `/wws-build` and `/wws-docs`.
 
 Supports Go, Node.js, Python, and PHP with framework-specific configurations.
 
-### `/aif-build-automation [makefile|taskfile|justfile|mage]`
+### `/wws-build [makefile|taskfile|justfile|mage]`
 Generates or enhances build automation files:
 ```
-/aif-build-automation              # Auto-detect or ask which tool
-/aif-build-automation makefile     # Generate a Makefile
-/aif-build-automation taskfile     # Generate a Taskfile.yml
-/aif-build-automation justfile     # Generate a justfile
-/aif-build-automation mage         # Generate a magefile.go
+/wws-build              # Auto-detect or ask which tool
+/wws-build makefile     # Generate a Makefile
+/wws-build taskfile     # Generate a Taskfile.yml
+/wws-build justfile     # Generate a justfile
+/wws-build mage         # Generate a magefile.go
 ```
 
 **Two modes — generate or enhance:**
@@ -324,13 +324,13 @@ Generates or enhances build automation files:
 
 Supports Go, Node.js, Python, and PHP with framework-specific targets (Laravel artisan, Next.js, FastAPI, etc.).
 
-### `/aif-ci [github|gitlab] [--enhance]`
+### `/wws-ci [github|gitlab] [--enhance]`
 Generates, enhances, or audits CI/CD pipeline configuration:
 ```
-/aif-ci                   # Auto-detect platform and mode
-/aif-ci github            # Generate GitHub Actions workflow
-/aif-ci gitlab            # Generate GitLab CI pipeline
-/aif-ci --enhance         # Force enhance mode on existing CI
+/wws-ci                   # Auto-detect platform and mode
+/wws-ci github            # Generate GitHub Actions workflow
+/wws-ci gitlab            # Generate GitLab CI pipeline
+/wws-ci --enhance         # Force enhance mode on existing CI
 ```
 
 **Three modes** (auto-detected):
@@ -358,20 +358,20 @@ Generates, enhances, or audits CI/CD pipeline configuration:
 - GitHub: explicit `permissions`, `actions/dependency-review-action` for PR security
 - Service containers (PostgreSQL, Redis) when tests need external dependencies
 
-After completion, suggests `/aif-build-automation` and `/aif-dockerize`.
+After completion, suggests `/wws-build` and `/wws-docker`.
 
-### `/aif-rules [rule text]`
+### `/ww-rules [rule text]`
 Adds project-specific rules and conventions:
 ```
-/aif-rules Always use DTO instead of arrays
-/aif-rules                                    # Interactive — asks what to add
+/ww-rules Always use DTO instead of arrays
+/ww-rules                                    # Interactive — asks what to add
 ```
-- Rules are saved to `.ai-factory/RULES.md`
+- Rules are saved to `.ww-kit/RULES.md`
 - Each invocation appends a new rule
-- Rules are automatically loaded by `/aif-implement` before task execution
+- Rules are automatically loaded by `/ww-do` before task execution
 - Use for coding conventions, naming rules, architectural constraints
 
-### `/aif-commit`
+### `/ww-commit`
 Creates conventional commits:
 - Analyzes staged changes
 - Generates meaningful commit message
@@ -380,40 +380,40 @@ Creates conventional commits:
 - Warning-first by default (no implicit strict mode)
 - For `feat`/`fix`/`perf`, warns when roadmap milestone linkage is missing
 
-### `/aif-review [PR number or URL]`
+### `/ww-review [PR number or URL]`
 Reviews staged changes or PR diffs:
 ```
-/aif-review
-/aif-review 123
-/aif-review https://github.com/org/repo/pull/123
+/ww-review
+/ww-review 123
+/ww-review https://github.com/org/repo/pull/123
 ```
 - Checks correctness, security, performance, and maintainability
 - Adds read-only context-gate findings (architecture/roadmap/rules) to review output
 - Uses `WARN` for non-blocking context drift and `ERROR` only for explicitly blocking review criteria
 
-### `/aif-reference <url|path> [url2|path2] [--name <ref-name>] [--update]`
+### `/ww-reference <url|path> [url2|path2] [--name <ref-name>] [--update]`
 Creates knowledge references from external sources for AI agents:
 ```
-/aif-reference https://zod.dev --name zod-validation
-/aif-reference https://docs.astro.build/en/getting-started/ https://docs.astro.build/en/guides/content-collections/
-/aif-reference ./docs/api-spec.yaml --name internal-api
-/aif-reference --update --name zod-validation
-/aif-reference list
-/aif-reference show zod-validation
+/ww-reference https://zod.dev --name zod-validation
+/ww-reference https://docs.astro.build/en/getting-started/ https://docs.astro.build/en/guides/content-collections/
+/ww-reference ./docs/api-spec.yaml --name internal-api
+/ww-reference --update --name zod-validation
+/ww-reference list
+/ww-reference show zod-validation
 ```
 - Fetches URLs (with automatic sub-page crawling, up to 8 pages per source), processes local files, or searches the web interactively
 - Synthesizes structured reference documents: overview, core concepts, API/interface, usage patterns, configuration, best practices, pitfalls
-- Saves to `.ai-factory/references/<name>.md` with source attribution and timestamps
-- Maintains an index in `.ai-factory/references/INDEX.md`
+- Saves to `.ww-kit/references/<name>.md` with source attribution and timestamps
+- Maintains an index in `.ww-kit/references/INDEX.md`
 - `--update` re-fetches sources and refreshes an existing reference
 - `list` / `show <name>` / `delete <name>` for managing existing references
-- References are available to all AI Factory skills — `/aif-plan`, `/aif-implement`, `/aif-grounded` can read them for domain context
+- References are available to all ww-kit skills — `/ww-plan`, `/ww-do`, `/ww-grounded` can read them for domain context
 - Best when AI needs knowledge it wasn't trained on: new libraries, internal APIs, project-specific specs, or rapidly changing documentation
 
-### `/aif-skill-generator`
+### `/wws-skill`
 Generates new skills:
 ```
-/aif-skill-generator project-api
+/wws-skill project-api
 ```
 - Creates SKILL.md with proper frontmatter
 - Follows [Agent Skills](https://agentskills.io) specification
@@ -421,9 +421,9 @@ Generates new skills:
 
 **Learn Mode** — pass URLs to generate skills from real documentation:
 ```
-/aif-skill-generator https://docs.example.com/tutorial/
-/aif-skill-generator https://docs.example.com/guide https://docs.example.com/reference
-/aif-skill-generator my-skill https://docs.example.com/api
+/wws-skill https://docs.example.com/tutorial/
+/wws-skill https://docs.example.com/guide https://docs.example.com/reference
+/wws-skill my-skill https://docs.example.com/api
 ```
 - Fetches and deeply studies each URL
 - Enriches with web search for best practices and pitfalls
@@ -431,28 +431,28 @@ Generates new skills:
 - Generates a complete skill package with references from real sources
 - Supports multiple URLs, mixed sources (docs + blogs), and optional skill name hint
 
-### `/aif-security-checklist [category]`
+### `/wws-security [category]`
 Security audit based on OWASP Top 10 and best practices:
 ```
-/aif-security-checklist                  # Full audit
-/aif-security-checklist auth             # Authentication & sessions
-/aif-security-checklist injection        # SQL/NoSQL/Command injection
-/aif-security-checklist xss              # Cross-site scripting
-/aif-security-checklist csrf             # CSRF protection
-/aif-security-checklist secrets          # Secrets & credentials
-/aif-security-checklist api              # API security
-/aif-security-checklist infra            # Infrastructure & headers
-/aif-security-checklist prompt-injection # LLM prompt injection
-/aif-security-checklist race-condition   # Race conditions & TOCTOU
+/wws-security                  # Full audit
+/wws-security auth             # Authentication & sessions
+/wws-security injection        # SQL/NoSQL/Command injection
+/wws-security xss              # Cross-site scripting
+/wws-security csrf             # CSRF protection
+/wws-security secrets          # Secrets & credentials
+/wws-security api              # API security
+/wws-security infra            # Infrastructure & headers
+/wws-security prompt-injection # LLM prompt injection
+/wws-security race-condition   # Race conditions & TOCTOU
 ```
 
 Each category includes a checklist, vulnerable/safe code examples (TypeScript, PHP), and an automated audit script.
 
 **Ignoring items** — if a finding is intentionally accepted, mark it as ignored:
 ```
-/aif-security-checklist ignore no-csrf
+/wws-security ignore no-csrf
 ```
-- Asks for a reason, saves to `.ai-factory/SECURITY.md`
+- Asks for a reason, saves to `.ww-kit/SECURITY.md`
 - Future audits skip these items but still show them in an **"Ignored Items"** section for transparency
 - Review ignored items periodically — risks change over time
 

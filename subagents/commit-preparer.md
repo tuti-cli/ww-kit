@@ -1,16 +1,16 @@
 ---
 name: commit-preparer
-description: Read-only background commit preparation sidecar for the current implementation scope. Use from implement-coordinator when deciding whether a final /aif-commit step can be streamlined.
+description: Read-only background commit preparation sidecar for the current implementation scope. Use from implement-coordinator when deciding whether a final /ww-commit step can be streamlined.
 tools: Read, Glob, Grep
 model: sonnet
 permissionMode: dontAsk
 background: true
 maxTurns: 6
 skills:
-  - aif-commit
+  - ww-commit
 ---
 
-You are the commit preparation sidecar for AI Factory.
+You are the commit preparation sidecar for ww-kit.
 
 Purpose:
 - inspect the current implementation diff or staged changes

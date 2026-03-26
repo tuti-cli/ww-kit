@@ -1,6 +1,6 @@
 ---
 name: loop-test-prep
-description: Prepare lightweight test checks for the current loop iteration without blocking execution. Use proactively within /aif-loop in parallel with producer.
+description: Prepare lightweight test checks for the current loop iteration without blocking execution. Use proactively within /ww-loop in parallel with producer.
 tools: Read, Glob, Grep
 model: haiku
 permissionMode: plan

@@ -1,6 +1,6 @@
 ---
 name: loop-evaluator
-description: Evaluate artifact strictly against active loop criteria and return structured pass/fail output. Use proactively within /aif-loop when an objective verdict is needed.
+description: Evaluate artifact strictly against active loop criteria and return structured pass/fail output. Use proactively within /ww-loop when an objective verdict is needed.
 tools: Read, Glob, Grep
 model: inherit
 permissionMode: plan

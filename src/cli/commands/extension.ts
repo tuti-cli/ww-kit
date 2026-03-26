@@ -21,12 +21,12 @@ import {
 export async function extensionAddCommand(source: string): Promise<void> {
   const projectDir = process.cwd();
 
-  console.log(chalk.bold.blue('\n🏭 AI Factory - Install Extension\n'));
+  console.log(chalk.bold.blue('\n⚡ ww-kit - Install Extension\n'));
 
   const config = await loadConfig(projectDir);
   if (!config) {
-    console.log(chalk.red('Error: No .ai-factory.json found.'));
-    console.log(chalk.dim('Run "ai-factory init" to set up your project first.'));
+    console.log(chalk.red('Error: No .ww-kit.json found.'));
+    console.log(chalk.dim('Run "ww-kit init" to set up your project first.'));
     process.exit(1);
   }
 
@@ -42,7 +42,7 @@ export async function extensionAddCommand(source: string): Promise<void> {
         resolved,
         log: (level, message) => {
           if (level === 'warn') {
-            console.log(chalk.yellow(`⚠ ${message}`));
+            console.log(chalk.yellow(`  ${message}`));
           } else {
             console.log(chalk.green(`✓ ${message}`));
           }
@@ -51,9 +51,6 @@ export async function extensionAddCommand(source: string): Promise<void> {
       await saveConfig(projectDir, config);
 
       console.log(chalk.green(`✓ Extension "${manifest.name}" v${manifest.version} installed`));
-      if (manifest.agents?.length) {
-        console.log(chalk.dim(`  Agents provided: ${manifest.agents.map(agent => agent.displayName).join(', ')}`));
-      }
       if (manifest.commands?.length) {
         console.log(chalk.dim(`  Commands provided: ${manifest.commands.map(command => command.name).join(', ')}`));
       }
@@ -73,11 +70,11 @@ export async function extensionAddCommand(source: string): Promise<void> {
 export async function extensionRemoveCommand(name: string): Promise<void> {
   const projectDir = process.cwd();
 
-  console.log(chalk.bold.blue('\n🏭 AI Factory - Remove Extension\n'));
+  console.log(chalk.bold.blue('\n⚡ ww-kit - Remove Extension\n'));
 
   const config = await loadConfig(projectDir);
   if (!config) {
-    console.log(chalk.red('Error: No .ai-factory.json found.'));
+    console.log(chalk.red('Error: No .ww-kit.json found.'));
     process.exit(1);
   }
 
@@ -93,31 +90,27 @@ export async function extensionRemoveCommand(name: string): Promise<void> {
     const extensionDir = path.join(getExtensionsDir(projectDir), name);
     const manifest = await loadExtensionManifest(extensionDir);
 
-    // Strip injections before removing files
     await stripInjectionsForAllAgents(projectDir, config.agents, name, manifest);
 
-    // Remove replacement skills (installed under base names)
     const extRecord = extensions[index];
     if (extRecord.replacedSkills?.length) {
       const removed = await removeSkillsForAllAgents(projectDir, config.agents, extRecord.replacedSkills);
-      for (const [agentId, skills] of removed) {
+      for (const [, skills] of removed) {
         if (skills.length > 0) {
-          console.log(chalk.green(`✓ Replacement skills removed for ${agentId}: ${skills.join(', ')}`));
+          console.log(chalk.green(`✓ Replacement skills removed: ${skills.join(', ')}`));
         }
       }
     }
 
-    // Remove extension custom skills
     if (manifest) {
       const removed = await removeCustomSkillsForAllAgents(projectDir, config.agents, manifest);
-      for (const [agentId, skills] of removed) {
+      for (const [, skills] of removed) {
         if (skills.length > 0) {
-          console.log(chalk.green(`✓ Skills removed for ${agentId}: ${skills.join(', ')}`));
+          console.log(chalk.green(`✓ Skills removed: ${skills.join(', ')}`));
         }
       }
     }
 
-    // Restore base skills if no other extension replaces them
     if (extRecord.replacedSkills?.length) {
       const stillReplaced = collectReplacedSkills(extensions, name);
       const restored = await restoreBaseSkills(projectDir, config.agents, extRecord.replacedSkills, stillReplaced);
@@ -126,12 +119,9 @@ export async function extensionRemoveCommand(name: string): Promise<void> {
       }
     }
 
-    // Remove MCP servers
     if (manifest?.mcpServers?.length) {
       const mcpKeys = manifest.mcpServers.map(s => s.key);
-      for (const agent of config.agents) {
-        await removeExtensionMcpServers(projectDir, agent.id, mcpKeys);
-      }
+      await removeExtensionMcpServers(projectDir, mcpKeys);
     }
 
     await removeExtensionFiles(projectDir, name);
@@ -153,7 +143,7 @@ export async function extensionListCommand(): Promise<void> {
 
   const config = await loadConfig(projectDir);
   if (!config) {
-    console.log(chalk.red('Error: No .ai-factory.json found.'));
+    console.log(chalk.red('Error: No .ww-kit.json found.'));
     process.exit(1);
   }
 
@@ -178,7 +168,6 @@ export async function extensionListCommand(): Promise<void> {
       }
       const features: string[] = [];
       if (manifest.commands?.length) features.push(`${manifest.commands.length} command(s)`);
-      if (manifest.agents?.length) features.push(`${manifest.agents.length} agent(s)`);
       if (manifest.injections?.length) features.push(`${manifest.injections.length} injection(s)`);
       if (manifest.skills?.length) features.push(`${manifest.skills.length} skill(s)`);
       if (manifest.mcpServers?.length) features.push(`${manifest.mcpServers.length} MCP server(s)`);
@@ -194,7 +183,7 @@ export async function extensionUpdateCommand(name?: string, options?: { force?: 
   const projectDir = process.cwd();
   const force = options?.force ?? false;
 
-  console.log(chalk.bold.blue('\n🏭 AI Factory - Update Extensions\n'));
+  console.log(chalk.bold.blue('\n⚡ ww-kit - Update Extensions\n'));
 
   if (force) {
     console.log(chalk.dim('Force mode: refreshing all extensions regardless of version\n'));
@@ -202,8 +191,8 @@ export async function extensionUpdateCommand(name?: string, options?: { force?: 
 
   const config = await loadConfig(projectDir);
   if (!config) {
-    console.log(chalk.red('Error: No .ai-factory.json found.'));
-    console.log(chalk.dim('Run "ai-factory init" to set up your project first.'));
+    console.log(chalk.red('Error: No .ww-kit.json found.'));
+    console.log(chalk.dim('Run "ww-kit init" to set up your project first.'));
     process.exit(1);
   }
 
@@ -246,13 +235,11 @@ export async function extensionUpdateCommand(name?: string, options?: { force?: 
 
   for (const r of summary.skipped) {
     if (r.failureReason === 'rate-limited') {
-      console.log(chalk.yellow(`  ⚠ ${r.name}: GitHub API rate limited, skipping`));
+      console.log(chalk.yellow(`  ${r.name}: GitHub API rate limited, skipping`));
     } else if (r.failureReason === 'lookup-failed') {
-      console.log(chalk.yellow(`  ⚠ ${r.name}: version check failed, retry or use --force`));
+      console.log(chalk.yellow(`  ${r.name}: version check failed, retry or use --force`));
     } else if (r.failureReason === 'source-type-requires-force') {
-      console.log(
-        chalk.yellow(`  ⚠ ${r.name}: source type requires --force to refresh`),
-      );
+      console.log(chalk.yellow(`  ${r.name}: source type requires --force to refresh`));
     } else {
       console.log(chalk.dim(`  - ${r.name}: ${r.failureReason}`));
     }
@@ -278,4 +265,3 @@ export async function extensionUpdateCommand(name?: string, options?: { force?: 
     process.exit(1);
   }
 }
-

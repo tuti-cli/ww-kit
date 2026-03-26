@@ -3,9 +3,7 @@ import fs from 'fs-extra';
 import { readTextFile, writeTextFile } from '../utils/fs.js';
 import type { AgentInstallation } from './config.js';
 import type { ExtensionRecord } from './config.js';
-import { getAgentConfig } from './agents.js';
 import { loadAllExtensions, type ExtensionManifest } from './extensions.js';
-import { getTransformer } from './transformer.js';
 
 function startMarker(extensionName: string, skillName: string, position: string): string {
   return `<!-- aif-ext:${extensionName}:${skillName}:${position}:start -->`;
@@ -32,7 +30,6 @@ export function applyInjection(
   extensionName: string,
   skillName: string,
 ): string {
-  // First strip existing injection for idempotency
   let content = stripInjection(skillContent, extensionName, skillName, position);
 
   const block = [
@@ -44,7 +41,6 @@ export function applyInjection(
   if (position === 'append') {
     content = content.trimEnd() + '\n\n' + block + '\n';
   } else {
-    // prepend: after frontmatter if present
     const fmMatch = content.match(/^---\n[\s\S]*?\n---\n/);
     if (fmMatch) {
       const afterFm = fmMatch[0].length;
@@ -62,14 +58,7 @@ function getSkillFilePath(
   agent: AgentInstallation,
   skillName: string,
 ): string {
-  const transformer = getTransformer(agent.id);
-  const result = transformer.transform(skillName, '');
-  const agentConfig = getAgentConfig(agent.id);
-
-  if (result.flat) {
-    return path.join(projectDir, agentConfig.configDir, result.targetDir, result.targetName);
-  }
-  return path.join(projectDir, agent.skillsDir, result.targetDir, 'SKILL.md');
+  return path.join(projectDir, agent.skillsDir, skillName, 'SKILL.md');
 }
 
 export async function applyExtensionInjections(
@@ -181,7 +170,6 @@ async function findMarkdownFiles(dir: string): Promise<string[]> {
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        // Recurse into subdirectories (covers skills/*/SKILL.md, workflows/*.md, rules/*.md)
         const nested = await findMarkdownFiles(fullPath);
         results.push(...nested);
       } else if (entry.isFile() && entry.name.endsWith('.md')) {
@@ -196,12 +184,10 @@ async function findMarkdownFiles(dir: string): Promise<string[]> {
 
 export async function stripInjectionsByExtensionName(
   projectDir: string,
-  agent: AgentInstallation,
+  _agent: AgentInstallation,
   extensionName: string,
 ): Promise<void> {
-  // Search agent configDir recursively — covers skills/*/SKILL.md,
-  // flat workflow files (e.g. .agent/workflows/*.md), and rules
-  const agentConfig = getAgentConfig(agent.id);
+  const agentConfig = await import('./agents.js').then(m => m.getAgentConfig());
   const configDir = path.join(projectDir, agentConfig.configDir);
   const files = await findMarkdownFiles(configDir);
 

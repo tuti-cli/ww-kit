@@ -2,7 +2,7 @@
 
 # Reflex Loop
 
-`/aif-loop` is a strict iterative workflow for quality-gated generation:
+`/ww-loop` is a strict iterative workflow for quality-gated generation:
 
 1. Generate initial artifact
 2. Evaluate against explicit rules
@@ -19,13 +19,13 @@ Terminology:
 ## Command Modes
 
 ```bash
-/aif-loop new <task>
-/aif-loop resume [alias]
-/aif-loop status
-/aif-loop stop [reason]
-/aif-loop list
-/aif-loop history [alias]
-/aif-loop clean [alias|--all]
+/ww-loop new <task>
+/ww-loop resume [alias]
+/ww-loop status
+/ww-loop stop [reason]
+/ww-loop list
+/ww-loop history [alias]
+/ww-loop clean [alias|--all]
 ```
 
 - `new` - start a new loop and initialize loop state
@@ -38,7 +38,7 @@ Terminology:
 
 ## Setup Confirmation (New Loop)
 
-Before iteration 1, `/aif-loop new` must always ask for explicit user confirmation of:
+Before iteration 1, `/ww-loop new` must always ask for explicit user confirmation of:
 
 1. Success criteria (rules + thresholds)
 2. Max iterations (`run.json.max_iterations`)
@@ -50,10 +50,10 @@ This confirmation is mandatory even when the task prompt already contains criter
 4 files total for loop persistence (1 global pointer + 3 per-loop files). `current.json` exists only while a loop is active:
 
 ```text
-.ai-factory/evolution/current.json
-.ai-factory/evolution/<task-alias>/run.json
-.ai-factory/evolution/<task-alias>/history.jsonl
-.ai-factory/evolution/<task-alias>/artifact.md
+.ww-kit/evolution/current.json
+.ww-kit/evolution/<task-alias>/run.json
+.ww-kit/evolution/<task-alias>/history.jsonl
+.ww-kit/evolution/<task-alias>/artifact.md
 ```
 
 ### `current.json`
@@ -121,7 +121,7 @@ Append-only event stream, one JSON object per line:
 
 Single source of truth for artifact content. Written after PRODUCE and REFINE phases. Artifact content is never stored in `run.json` — always read from this file.
 
-Ownership note: `artifact.md` is owned by `/aif-loop` for the active run. Other workflow commands should treat loop artifacts as read-only context unless the user explicitly asks for manual edits.
+Ownership note: `artifact.md` is owned by `/ww-loop` for the active run. Other workflow commands should treat loop artifacts as read-only context unless the user explicitly asks for manual edits.
 
 ## Phases
 
@@ -147,7 +147,7 @@ If `Task` tool is unavailable, all phases execute sequentially as fallback.
 
 Strict I/O contracts are defined in skill references:
 
-- `skills/aif-loop/references/PHASE-CONTRACTS.md` - input/output/constraints per phase
+- `skills/ww-loop/references/PHASE-CONTRACTS.md` - input/output/constraints per phase
 
 ## Evaluation Rules
 
@@ -177,11 +177,11 @@ Severity levels: `fail` (weight 2, blocks pass), `warn` (weight 1, reduces score
 
 Template rows are shorthand; during setup they are normalized to full runtime rules. If `weight` is omitted, it is derived from severity (`fail`=2, `warn`=1, `info`=0). If task-specific checks are needed, `check` is materialized before iteration starts.
 
-Full schema and ID conventions: `skills/aif-loop/references/RULE-SCHEMA.md`
+Full schema and ID conventions: `skills/ww-loop/references/RULE-SCHEMA.md`
 
 ### Criteria Templates
 
-Pre-built rule sets for common task types (API spec, code generation, documentation, configuration): `skills/aif-loop/references/CRITERIA-TEMPLATES.md`
+Pre-built rule sets for common task types (API spec, code generation, documentation, configuration): `skills/ww-loop/references/CRITERIA-TEMPLATES.md`
 
 ## Iteration Flow
 
@@ -273,7 +273,7 @@ Hash: {first 8 chars of artifact SHA-256}
 Changed: {list of added/modified sections or "initial generation"}
 Failed: {rule IDs or "none"}
 Warnings: {rule IDs or "none"}
-Artifact: .ai-factory/evolution/<alias>/artifact.md
+Artifact: .ww-kit/evolution/<alias>/artifact.md
 ```
 
 If `passed=false`, append compact critique (rule ID + 1-line fix per issue).
@@ -290,7 +290,7 @@ Show the full artifact content (not just summary) in these cases:
 
 All loop state is persisted to disk. Clearing conversation context loses nothing — `resume` reconstructs from files.
 
-Recommend `/clear` then `/aif-loop resume` when:
+Recommend `/clear` then `/ww-loop resume` when:
 
 - After iteration 2 (midpoint of default 4-iteration loop)
 - On Phase A → B transition
@@ -322,7 +322,7 @@ The loop uses a phase model with targeted parallelism:
 
 ## See Also
 
-- [Development Workflow](workflow.md) - where `/aif-loop` fits in the overall process
+- [Development Workflow](workflow.md) - where `/ww-loop` fits in the overall process
 - [Subagents](subagents.md) - Claude-only loop roles used to split planning, generation, and evaluation
-- [Core Skills](skills.md) - full command reference including `/aif-loop`
-- [Configuration](configuration.md) - `.ai-factory/` storage layout
+- [Core Skills](skills.md) - full command reference including `/ww-loop`
+- [Configuration](configuration.md) - `.ww-kit/` storage layout

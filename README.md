@@ -1,142 +1,249 @@
-<p align="center">
-  <a href="https://www.npmjs.com/package/ai-factory">
-    <img src="https://img.shields.io/npm/v/ai-factory?label=version" alt="Version" />
-  </a>
-  <a href="https://aif.cutcode.dev/">
-    <img src="https://img.shields.io/badge/official%20site-aif.cutcode.dev-0ea5e9" alt="Official Site" />
-  </a>
-  <a href="https://github.com/lee-to/ai-factory/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/lee-to/ai-factory/ci.yml?branch=2.x&label=tests" alt="Tests" />
-  </a>
-</p>
+# ww-kit
 
-![logo](https://github.com/lee-to/ai-factory/raw/2.x/art/promo.png)
+> **AI-powered development workflow kit for Claude Code.**
 
-# AI Factory
-
-> **Stop configuring. Start building.**
-
-You want to build with AI, but setting up the right context, prompts, and workflows takes time. AI Factory handles all of that so you can focus on what matters — shipping quality code.
-
-**One command. Full AI-powered development environment.**
-
-```bash
-ai-factory init
 ```
+  ┌─────────────────────────────────────────────────────────────────────────────────┐
+  │                           ONE-TIME PROJECT SETUP                                │
+  │                                                                                 │
+  │   $ ww-kit init ──▶ Select skills ──▶ Configure MCP ──▶ Done                   │
+  │                                                                                 │
+  │   Then in Claude Code:                                                          │
+  │                                                                                 │
+  │   /ww ──────────────▶ Analyze project, detect stack, generate DESCRIPTION.md    │
+  │     │                                                                           │
+  │     ├──▶ /ww-arch ──────── Architecture guidelines + ARCHITECTURE.md            │
+  │     ├──▶ /ww-rules ─────── Project conventions → RULES.md                       │
+  │     ├──▶ /wws-roadmap ──── Strategic milestones → ROADMAP.md                    │
+  │     └──▶ /wws-ci, /wws-docker, /wws-build, /wws-docs (optional scaffolding)    │
+  │                                                                                 │
+  └─────────────────────────────────────────────────────────────────────────────────┘
 
----
-
-## Why AI Factory?
-
-- **Zero configuration** — installs relevant skills, configures integrations
-- **Best practices built-in** — logging, commits, code review, all following industry standards
-- **Spec-driven development** — AI follows plans, not random exploration. Predictable, resumable, reviewable
-- **Community skills** — leverage [skills.sh](https://skills.sh) ecosystem or generate custom skills
-- **Stack-agnostic** — works with any language, framework, or platform
-- **Multi-agent support** — Claude Code, Cursor, Windsurf, Roo Code, Kilo Code, Antigravity, OpenCode, Warp, Zencoder, Codex CLI, GitHub Copilot, Gemini CLI, Junie, Qwen Code, or [any agent](docs/getting-started.md#supported-agents)
+  ┌─────────────────────────────────────────────────────────────────────────────────┐
+  │                          DEVELOPMENT LOOP (repeat)                              │
+  │                                                                                 │
+  │                                                                                 │
+  │   ┌─── THINK ────────────────────────────────────────────────────────────┐      │
+  │   │                                                                      │      │
+  │   │  /ww-explore ─── brainstorm ideas, compare options, map constraints  │      │
+  │   │  /ww-grounded ── evidence-only answers, no guessing allowed          │      │
+  │   │  /ww-reference ─ import external docs/APIs for AI context            │      │
+  │   │                                                                      │      │
+  │   └──────────────────────────────┬───────────────────────────────────────┘      │
+  │                                  ▼                                              │
+  │   ┌─── PLAN ─────────────────────────────────────────────────────────────┐      │
+  │   │                                                                      │      │
+  │   │  /ww-plan fast ──── quick plan → .ww-kit/PLAN.md (no branch)        │      │
+  │   │  /ww-plan full ──── git branch → .ww-kit/plans/<branch>.md          │      │
+  │   │  /ww-plan --deep ── discovery → user stories → phases → tasks       │      │
+  │   │  /ww-plan full --parallel ── isolated worktree for concurrent work   │      │
+  │   │                                                                      │      │
+  │   │  /ww-grill ──────── stress-test the plan: clarify → challenge →     │      │
+  │   │                     reality-check (3 phases)                         │      │
+  │   │  /ww-improve ────── refine plan: find missing tasks, fix deps       │      │
+  │   │                                                                      │      │
+  │   └──────────────────────────────┬───────────────────────────────────────┘      │
+  │                                  ▼                                              │
+  │   ┌─── EXECUTE ──────────────────────────────────────────────────────────┐      │
+  │   │                                                                      │      │
+  │   │  /ww-do ─────────── execute tasks one by one, commit at checkpoints  │      │
+  │   │  /ww-fix ────────── quick bug fix (fix now or plan first) + patch    │      │
+  │   │  /ww-loop ───────── iterative refine: PLAN → PRODUCE → EVALUATE →   │      │
+  │   │                     CRITIQUE → REFINE (up to N iterations)           │      │
+  │   │                                                                      │      │
+  │   └──────────────────────────────┬───────────────────────────────────────┘      │
+  │                                  ▼                                              │
+  │   ┌─── VERIFY ──────────────────────────────────────────────────────────┐      │
+  │   │                                                                      │      │
+  │   │  /ww-verify ─────── check implementation vs plan (--strict for PRs)  │      │
+  │   │  /ww-review ─────── code review: correctness, security, performance  │      │
+  │   │  /wws-security ──── OWASP Top 10 + auth, injection, XSS, CSRF audit │      │
+  │   │  /ww-audit ──────── codebase health: deps, quality, coverage, debt   │      │
+  │   │                                                                      │      │
+  │   └──────────────────────────────┬───────────────────────────────────────┘      │
+  │                                  ▼                                              │
+  │   ┌─── COMMIT & LEARN ──────────────────────────────────────────────────┐      │
+  │   │                                                                      │      │
+  │   │  /ww-commit ─────── quality gates + conventional commit message      │      │
+  │   │  /ww-evolve ─────── patches → skill-context improvements →           │      │
+  │   │                     AI gets smarter with every run                    │      │
+  │   │                                                                      │      │
+  │   └──────────────────────────────────────────────────────────────────────┘      │
+  │                                                                                 │
+  └─────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Installation
 
-### Using npm
-
 ```bash
-npm install -g ai-factory
-```
-
-### Using mise
-
-```bash
-mise use -g npm:ai-factory
+npm install -g ww-kit          # or: mise use -g npm:ww-kit
 ```
 
 ## Quick Start
 
 ```bash
-# In your project directory
-ai-factory init
+ww-kit init                    # install skills, configure MCP
 ```
 
-This will:
-- Ask which AI agent you use
-- Install relevant skills
-- Configure MCP servers (for supported agents)
-
-Then open your AI agent and start working:
-
 ```
-/aif
+/ww                            # analyze project, generate context
+/ww-plan Add user auth         # plan a feature
+/ww-do                         # execute the plan
+/ww-commit                     # quality gates + commit
 ```
 
-## Usage
+---
 
-If the package is installed:
+## All Commands — Detailed Reference
+
+### Setup
+
+| Command | Modes | What it does |
+|---------|-------|-------------|
+| `/ww` | `/ww` · `/ww <description>` | Analyze project → DESCRIPTION.md. 3 modes: existing project, new with description, empty project |
+| `/ww-arch` | `/ww-arch [clean\|ddd\|microservices\|monolith\|layers]` | Architecture guidelines → ARCHITECTURE.md |
+| | `/ww-arch brainstorm <topic>` | Explore architecture options → proposals/ |
+| | `/ww-arch challenge <topic>` | Stress-test proposal via /ww-grill → challenges/ |
+| | `/ww-arch decide <topic>` | Lock decision → ADR in decisions/ |
+| `/ww-rules` | `/ww-rules [rule text]` | Add conventions → RULES.md |
+
+### Think — before you plan
+
+| Command | Modes | What it does |
+|---------|-------|-------------|
+| `/ww-explore` | `/ww-explore [topic]` | Brainstorm, compare options, map constraints. Saves to RESEARCH.md |
+| `/ww-grounded` | `/ww-grounded <question>` | Evidence-only answers. Confidence < 100 → refuses to guess |
+| `/ww-reference` | `/ww-reference <url\|path> [--name N] [--update]` | Import external docs for AI context → references/ |
+| | `/ww-reference list\|show\|delete` | Manage existing references |
+
+### Plan — structure the work
+
+| Command | Modes | What it does |
+|---------|-------|-------------|
+| `/ww-plan` | `fast <desc>` | Quick plan → PLAN.md, no git branch |
+| | `full <desc>` | Git branch + full plan → plans/\<branch\>.md |
+| | `--deep <desc>` | Discovery interview → user stories → phases → task breakdown |
+| | `full --parallel <desc>` | Isolated worktree for concurrent feature work |
+| | `--list` | Show active worktrees and plan status |
+| | `--cleanup <branch>` | Remove worktree, optionally delete branch |
+| `/ww-grill` | `/ww-grill [topic\|file]` | Stress-test in 3 phases: Map terrain → Break assumptions → Ground in reality |
+| `/ww-improve` | `/ww-improve [--list] [@file] [prompt]` | Refine plan: find missing tasks, fix deps, remove redundancy |
+
+### Execute — do the work
+
+| Command | Modes | What it does |
+|---------|-------|-------------|
+| `/ww-do` | `/ww-do` | Resume from next incomplete task, commit at checkpoints |
+| | `/ww-do @<file>` | Execute explicit plan file |
+| | `/ww-do <number>` | Start from specific task |
+| | `/ww-do status` | Check progress without executing |
+| | `/ww-do --list` | Show available plans |
+| `/ww-fix` | `/ww-fix <error>` → Fix now | Investigate, fix with logging, create patch |
+| | `/ww-fix <error>` → Plan first | Create FIX_PLAN.md, stop for review |
+| | `/ww-fix` (plan exists) | Execute FIX_PLAN.md |
+| `/ww-loop` | `new <task>` | Start iterative loop: PLAN → PRODUCE → EVALUATE → CRITIQUE → REFINE |
+| | `resume [alias]` | Continue active loop |
+| | `status` · `stop` · `list` · `history` · `clean` | Manage loop lifecycle |
+
+### Verify — check quality
+
+| Command | Modes | What it does |
+|---------|-------|-------------|
+| `/ww-verify` | `/ww-verify` | Check implementation vs plan, build/test/lint |
+| | `/ww-verify --strict` | Zero tolerance: all tasks done, no TODOs, gates fail on violations |
+| `/ww-review` | `/ww-review` | Review staged changes |
+| | `/ww-review <PR#>` | Review pull request |
+| | `/ww-review <ref>` | Review commits between ref and HEAD |
+| `/ww-audit` | `/ww-audit` | Codebase health: deps, quality, coverage, security → AUDIT.md + TECH-DEBT.md |
+| | `/ww-audit --legacy` | + EOL detection, migration paths, deprecated patterns |
+| | `/ww-audit --debt-only` | Convert existing AUDIT.md → prioritized TECH-DEBT.md |
+
+### Commit & Learn
+
+| Command | Modes | What it does |
+|---------|-------|-------------|
+| `/ww-commit` | `/ww-commit [scope]` | Quality gates → conventional commit. Checks arch/rules/roadmap alignment |
+| `/ww-evolve` | `/ww-evolve [skill\|all]` | Read patches → analyze patterns → improve skill-context → AI gets smarter |
+
+### Generators (`/wws-*`) — scaffolding
+
+| Command | Modes | What it does |
+|---------|-------|-------------|
+| `/wws-docs` | `/wws-docs` · `--web` | Generate README + docs/. `--web` adds HTML site |
+| `/wws-ci` | `/wws-ci [github\|gitlab] [--enhance]` | CI pipeline: lint, tests, build, security |
+| `/wws-docker` | `/wws-docker` · `--audit` | Dockerfile + compose (dev/prod) + .dockerignore |
+| `/wws-build` | `/wws-build [makefile\|taskfile\|justfile\|mage]` | Build automation with stack-aware targets |
+| `/wws-roadmap` | `/wws-roadmap` · `check` · `<vision>` | Strategic milestones → ROADMAP.md |
+| `/wws-security` | `/wws-security [auth\|injection\|xss\|csrf\|secrets\|api\|infra\|prompt-injection\|race-condition]` | Security audit by category |
+| `/wws-skill` | `/wws-skill <name>` · `<url>` · `search` · `scan` · `validate` · `template` | Generate, learn, search, or validate skills |
+| `/wws-best-practices` | `/wws-best-practices [naming\|structure\|errors\|testing\|review]` | Code quality guidelines by topic |
+
+---
+
+## Project Files
+
+All ww-kit artifacts live in `.ww-kit/` to keep your project root clean:
+
+```
+.ww-kit/
+├── DESCRIPTION.md              # Project spec (written by /ww)
+├── ARCHITECTURE.md             # Architecture decisions (written by /ww-arch)
+├── RULES.md                    # Conventions (written by /ww-rules)
+├── ROADMAP.md                  # Strategic milestones (written by /wws-roadmap)
+├── RESEARCH.md                 # Exploration notes (written by /ww-explore)
+├── PLAN.md                     # Quick plan (written by /ww-plan fast)
+├── FIX_PLAN.md                 # Bug fix plan (written by /ww-fix)
+├── AUDIT.md                    # Health report (written by /ww-audit)
+├── TECH-DEBT.md                # Prioritized debt (written by /ww-audit)
+├── SECURITY.md                 # Security findings (written by /wws-security)
+├── plans/                      # Feature plans by branch name
+├── patches/                    # Self-improvement patches from /ww-fix
+├── references/                 # External knowledge (from /ww-reference)
+├── decisions/                  # Architecture Decision Records
+├── skill-context/              # Per-skill improvements (from /ww-evolve)
+├── evolutions/                 # Evolution logs + patch cursor
+└── evolution/                  # Loop state (from /ww-loop)
+```
+
+---
+
+## Example Session
+
 ```bash
-ai-factory init
+# 1. Set up project context
+/ww
+/ww-arch
+
+# 2. Research before planning
+/ww-explore Add real-time notifications with WebSockets
+/ww-reference https://docs.example.com/websocket-api --name ws-api
+
+# 3. Plan the feature
+/ww-plan full Add real-time notifications with WebSockets
+
+# 4. Stress-test the plan
+/ww-grill
+
+# 5. Refine based on feedback
+/ww-improve add reconnection handling and message queuing
+
+# 6. Execute
+/ww-do
+
+# 7. Fix something that came up
+/ww-fix WebSocket connection drops after 30s idle
+
+# 8. Verify everything
+/ww-verify --strict
+
+# 9. Commit
+/ww-commit
+
+# 10. Let AI learn from the experience
+/ww-evolve
 ```
-
-Or running without installation via `npx`:
-```bash
-npx ai-factory init
-```
-
-### Upgrading from v1 to v2
-
-```bash
-ai-factory upgrade
-```
-
-`ai-factory upgrade` removes old bare-named skills (`commit`, `feature`, etc.) and installs new `aif-*` prefixed versions. Custom skills are preserved.
-
-> **Note:** `ai-factory update` automatically checks npm for a newer CLI version and offers to install it before updating skills, then reports `changed/unchanged/skipped/removed` for installed base skills. Use `ai-factory update --force` for a clean reinstall of currently installed base skills.
-
-### Example Workflow
-
-```bash
-# Explore options and requirements before planning (optional)
-/aif-explore Add user authentication with OAuth
-
-# Need a strictly verified answer before changing anything?
-/aif-grounded Does this repo already support OAuth providers?
-
-# Plan a feature — creates branch, analyzes codebase, builds step-by-step plan
-/aif-plan Add user authentication with OAuth
-
-# Optionally refine the plan with deeper analysis
-/aif-improve
-
-# Execute the plan — implements tasks one by one, commits at checkpoints
-/aif-implement
-
-# Create a knowledge reference from docs AI doesn't know about
-/aif-reference https://docs.example.com/api-reference --name example-api
-
-# Fix a bug — AI learns from every fix and gets smarter over time
-/aif-fix TypeError: Cannot read property 'name' of undefined
-
-# Set up CI pipeline — GitHub Actions or GitLab CI with linting, SA, tests
-/aif-ci github
-
-# Generate project documentation — README + docs/ with topics
-/aif-docs
-```
-
-See the full [Development Workflow](docs/workflow.md) with diagram and decision table.
-
-### Auto-Generated Documentation
-
-AI Factory can generate and maintain your project docs with a single command:
-
-```bash
-/aif-docs          # Creates README + docs/ structure from your codebase
-/aif-docs --web    # Also generates a static HTML documentation site
-```
-
-- **Generates docs from scratch** — analyzes your codebase and creates a lean README + detailed `docs/` pages by topic
-- **Cleans up scattered files** — finds loose CONTRIBUTING.md, ARCHITECTURE.md, SETUP.md in your root and consolidates them into a structured `docs/` directory
-- **Keeps docs in sync** — integrates with `/aif-implement` docs policy (`Docs: yes` = mandatory docs checkpoint routed to `/aif-docs`, `Docs: no` = visible `WARN [docs]`)
-- **Builds a docs website** — `--web` generates a static HTML site with navigation and dark mode, ready to host
 
 ---
 
@@ -144,39 +251,24 @@ AI Factory can generate and maintain your project docs with a single command:
 
 | Guide | Description |
 |-------|-------------|
-| [Getting Started](docs/getting-started.md) | What is AI Factory, supported agents, CLI commands |
-| [Development Workflow](docs/workflow.md) | Workflow diagram, when to use `explore` vs `grounded`, spec-driven approach |
-| [Reflex Loop](docs/loop.md) | Iterative generate → evaluate → critique → refine workflow |
-| [Subagents](docs/subagents.md) | Claude Code only: repo-local planning, implementation, and loop subagents with narrow role contracts |
-| [Core Skills](docs/skills.md) | All slash commands — explore, grounded, plan, fix, implement, evolve, docs, and more |
-| [Skill Evolution](docs/evolve.md) | How /aif-fix patches feed into /aif-evolve to generate smarter skill rules |
-| [Plan Files](docs/plan-files.md) | Plan files, self-improvement patches, skill acquisition |
-| [Security](docs/security.md) | Two-level security scanning for external skills |
-| [Extensions](docs/extensions.md) | Writing and installing extensions — commands, injections, MCP, agents |
-| [Configuration](docs/configuration.md) | `.ai-factory.json`, MCP servers, project structure, best practices |
+| [Getting Started](docs/getting-started.md) | First project walkthrough, CLI commands |
+| [Development Workflow](docs/workflow.md) | Full workflow diagram and decision table |
+| [Reflex Loop](docs/loop.md) | Iterative generate → evaluate → refine protocol |
+| [Core Skills](docs/skills.md) | Detailed reference for every command |
+| [Subagents](docs/subagents.md) | Planning, implementation, and loop subagents |
+| [Skill Evolution](docs/evolve.md) | How fixes feed into smarter skills |
+| [Plan Files](docs/plan-files.md) | Plan formats and self-improvement patches |
+| [Security](docs/security.md) | Security scanning for external skills |
+| [Extensions](docs/extensions.md) | Writing and installing extensions |
+| [Configuration](docs/configuration.md) | `.ww-kit.json`, MCP, project structure |
 
 ---
 
-![happy](https://github.com/lee-to/ai-factory/raw/2.x/art/happy.png)
-
 ## Links
 
-- [Official Website](https://aif.cutcode.dev) - AI Factory website
-- If AI Factory feels too simple for your goals, try [HLV](https://github.com/lee-to/hlv)
-- [skills.sh](https://skills.sh) - Skill marketplace
-- [Agent Skills Spec](https://agentskills.io) - Skill specification
-- [Claude Code](https://claude.ai/code) - Anthropic's AI coding agent
-- [Cursor](https://cursor.com) - AI-powered code editor
-- [OpenCode](https://opencode.ai) - Open-source AI coding agent
-- [Roo Code](https://roocode.com) - AI coding agent for VS Code
-- [Kilo Code](https://kilo.ai) - Open-source agentic coding platform
-- [Windsurf](https://windsurf.com) - AI-powered code editor by Codeium
-- [Warp](https://www.warp.dev) - Intelligent terminal with AI agent
-- [Zencoder](https://zencoder.ai) - AI coding agent for VS Code and JetBrains
-- [Codex CLI](https://github.com/openai/codex) - OpenAI's coding agent
-- [Gemini CLI](https://github.com/google-gemini/gemini-cli) - Google's coding agent
-- [Antigravity](https://antigravity.dev) - AI coding agent
-- [Junie](https://www.jetbrains.com/junie/) - JetBrains' AI coding agent
+- [skills.sh](https://skills.sh) — Skill marketplace
+- [Agent Skills Spec](https://agentskills.io) — Skill specification
+- [Claude Code](https://claude.ai/code) — Anthropic's AI coding agent
 
 ## License
 

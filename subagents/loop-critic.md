@@ -1,6 +1,6 @@
 ---
 name: loop-critic
-description: Convert failed evaluation rules into precise, minimal fix instructions for the refiner. Use proactively within /aif-loop when evaluation fails.
+description: Convert failed evaluation rules into precise, minimal fix instructions for the refiner. Use proactively within /ww-loop when evaluation fails.
 tools: Read
 model: sonnet
 permissionMode: plan

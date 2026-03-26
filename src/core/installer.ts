@@ -13,13 +13,12 @@ import {
   writeTextFile,
   removeDirectory,
   removeFile,
-  fileExists,
   hashDirectory,
 } from '../utils/fs.js';
 import type { AgentInstallation, ManagedArtifactState } from './config.js';
 import { getAgentConfig } from './agents.js';
-import { processSkillTemplates, buildTemplateVars, processTemplate } from './template.js';
-import { getTransformer, extractFrontmatterName, replaceFrontmatterName } from './transformer.js';
+import { processSkillTemplates } from './template.js';
+import { extractFrontmatterName, replaceFrontmatterName } from './transformer.js';
 
 const EXTENSION_INJECTION_BLOCK_PATTERN = /\n?<!-- aif-ext:[^:]+:[^:]+:[^:]+:start -->\n[\s\S]*?\n<!-- aif-ext:[^:]+:[^:]+:[^:]+:end -->\n?/g;
 
@@ -56,7 +55,6 @@ export interface InstallOptions {
   projectDir: string;
   skillsDir: string;
   skills: string[];
-  agentId: string;
 }
 
 export interface InstallSubagentsOptions {
@@ -70,7 +68,6 @@ interface ResolvedSkillPaths {
   targetSkillFile: string;
   targetRefsDir: string;
   sourceRefsDir: string;
-  flat: boolean;
 }
 
 interface ResolvedSubagentPaths {
@@ -140,35 +137,17 @@ async function hashManagedFile(filePath: string, relPath: string): Promise<strin
 function resolveSkillPaths(
   projectDir: string,
   skillsDir: string,
-  agentId: string,
   skillName: string,
   sourceSkillDir: string,
 ): ResolvedSkillPaths {
-  const transformer = getTransformer(agentId);
-  const agentConfig = getAgentConfig(agentId);
-  const transformed = transformer.transform(skillName, '');
-
   const sourceRefsDir = path.join(sourceSkillDir, 'references');
-  if (transformed.flat) {
-    const targetSkillDir = path.join(projectDir, agentConfig.configDir, transformed.targetDir);
-    return {
-      sourceSkillDir,
-      targetSkillDir,
-      targetSkillFile: path.join(targetSkillDir, transformed.targetName),
-      targetRefsDir: path.join(targetSkillDir, 'references'),
-      sourceRefsDir,
-      flat: true,
-    };
-  }
-
-  const targetSkillDir = path.join(projectDir, skillsDir, transformed.targetDir);
+  const targetSkillDir = path.join(projectDir, skillsDir, skillName);
   return {
     sourceSkillDir,
     targetSkillDir,
     targetSkillFile: path.join(targetSkillDir, 'SKILL.md'),
     targetRefsDir: path.join(targetSkillDir, 'references'),
     sourceRefsDir,
-    flat: false,
   };
 }
 
@@ -183,33 +162,7 @@ function resolveSubagentPaths(projectDir: string, subagentsDir: string, relPath:
 }
 
 async function hashInstalledSkill(paths: ResolvedSkillPaths): Promise<string | null> {
-  if (!paths.flat) {
-    return hashManagedDirectory(paths.targetSkillDir);
-  }
-
-  const mainFileExists = await fileExists(paths.targetSkillFile);
-  if (!mainFileExists) {
-    return null;
-  }
-
-  const filesToHash: Array<{ absPath: string; relPath: string }> = [
-    {
-      absPath: paths.targetSkillFile,
-      relPath: path.basename(paths.targetSkillFile),
-    },
-  ];
-
-  const sourceRefs = await listFilesRecursive(paths.sourceRefsDir);
-  for (const sourceRef of sourceRefs) {
-    const relPath = path.relative(paths.sourceRefsDir, sourceRef).replaceAll('\\', '/');
-    const targetRef = path.join(paths.targetRefsDir, relPath);
-    filesToHash.push({
-      absPath: targetRef,
-      relPath: `references/${relPath}`,
-    });
-  }
-
-  return hashManagedFiles(filesToHash);
+  return hashManagedDirectory(paths.targetSkillDir);
 }
 
 async function getManagedSkillState(
@@ -223,7 +176,7 @@ async function getManagedSkillState(
     return null;
   }
 
-  const paths = resolveSkillPaths(projectDir, agentInstallation.skillsDir, agentInstallation.id, skillName, sourceSkillDir);
+  const paths = resolveSkillPaths(projectDir, agentInstallation.skillsDir, skillName, sourceSkillDir);
   const installedHash = await hashInstalledSkill(paths);
   if (!installedHash) {
     return null;
@@ -305,54 +258,33 @@ export async function buildManagedSubagentsState(
   return state;
 }
 
-async function installSkillWithTransformer(
+async function installSkillDirect(
   sourceSkillDir: string,
   skillName: string,
   projectDir: string,
   skillsDir: string,
-  agentId: string,
-  agentConfig: ReturnType<typeof getAgentConfig>,
 ): Promise<void> {
-  const transformer = getTransformer(agentId);
   const skillMdPath = path.join(sourceSkillDir, 'SKILL.md');
   const content = await readTextFile(skillMdPath);
   if (!content) {
     throw new Error(`SKILL.md not found in ${sourceSkillDir}`);
   }
 
-  // If skill is installed under a different name (e.g. replacement), rewrite frontmatter name
   const fmName = extractFrontmatterName(content);
   const adjustedContent = (fmName && fmName !== skillName) ? replaceFrontmatterName(content, skillName) : content;
 
-  const result = transformer.transform(skillName, adjustedContent);
-  const vars = buildTemplateVars(agentConfig);
-
-  if (result.flat) {
-    const targetPath = path.join(projectDir, agentConfig.configDir, result.targetDir, result.targetName);
-    await writeTextFile(targetPath, processTemplate(result.content, vars));
-
-    // Copy references directory if it exists in the source skill
-    const sourceRefsDir = path.join(sourceSkillDir, 'references');
-    if (await fileExists(sourceRefsDir)) {
-      const targetRefsDir = path.join(projectDir, agentConfig.configDir, result.targetDir, 'references');
-      await copyDirectory(sourceRefsDir, targetRefsDir);
-    }
-  } else {
-    const targetSkillDir = path.join(projectDir, skillsDir, result.targetDir);
-    await copyDirectory(sourceSkillDir, targetSkillDir);
-    if (result.content !== content) {
-      await writeTextFile(path.join(targetSkillDir, 'SKILL.md'), result.content);
-    } else if (adjustedContent !== content) {
-      await writeTextFile(path.join(targetSkillDir, 'SKILL.md'), adjustedContent);
-    }
-    await processSkillTemplates(targetSkillDir, agentConfig);
+  const targetSkillDir = path.join(projectDir, skillsDir, skillName);
+  await copyDirectory(sourceSkillDir, targetSkillDir);
+  if (adjustedContent !== content) {
+    await writeTextFile(path.join(targetSkillDir, 'SKILL.md'), adjustedContent);
   }
+  const agentConfig = getAgentConfig();
+  await processSkillTemplates(targetSkillDir, agentConfig);
 }
 
 export async function installSkills(options: InstallOptions): Promise<string[]> {
-  const { projectDir, skillsDir, skills, agentId } = options;
+  const { projectDir, skillsDir, skills } = options;
   const installedSkills: string[] = [];
-  const agentConfig = getAgentConfig(agentId);
 
   const targetDir = path.join(projectDir, skillsDir);
   await ensureDir(targetDir);
@@ -363,16 +295,11 @@ export async function installSkills(options: InstallOptions): Promise<string[]> 
     const sourceSkillDir = path.join(packageSkillsDir, skill);
 
     try {
-      await installSkillWithTransformer(sourceSkillDir, skill, projectDir, skillsDir, agentId, agentConfig);
+      await installSkillDirect(sourceSkillDir, skill, projectDir, skillsDir);
       installedSkills.push(skill);
     } catch (error) {
       console.warn(`Warning: Could not install skill "${skill}": ${error}`);
     }
-  }
-
-  const transformer = getTransformer(agentId);
-  if (transformer.postInstall) {
-    await transformer.postInstall(projectDir);
   }
 
   return installedSkills;
@@ -417,14 +344,13 @@ export async function installExtensionSkills(
   skillPaths: string[],
   nameOverrides?: Record<string, string>,
 ): Promise<string[]> {
-  const agentConfig = getAgentConfig(agentInstallation.id);
   const installed: string[] = [];
 
   for (const skillPath of skillPaths) {
     const sourceDir = path.join(extensionDir, skillPath);
     const skillName = nameOverrides?.[skillPath] ?? path.basename(skillPath);
     try {
-      await installSkillWithTransformer(sourceDir, skillName, projectDir, agentInstallation.skillsDir, agentInstallation.id, agentConfig);
+      await installSkillDirect(sourceDir, skillName, projectDir, agentInstallation.skillsDir);
       installed.push(skillName);
     } catch (error) {
       console.warn(`Warning: Could not install extension skill "${skillName}": ${error}`);
@@ -439,20 +365,12 @@ async function removeSkillsByName(
   agentInstallation: AgentInstallation,
   skillNames: string[],
 ): Promise<string[]> {
-  const agentConfig = getAgentConfig(agentInstallation.id);
-  const transformer = getTransformer(agentInstallation.id);
   const removed: string[] = [];
 
   for (const skillName of skillNames) {
     try {
-      const result = transformer.transform(skillName, '');
-      if (result.flat) {
-        const targetPath = path.join(projectDir, agentConfig.configDir, result.targetDir, result.targetName);
-        await removeDirectory(targetPath);
-      } else {
-        const targetSkillDir = path.join(projectDir, agentInstallation.skillsDir, result.targetDir);
-        await removeDirectory(targetSkillDir);
-      }
+      const targetSkillDir = path.join(projectDir, agentInstallation.skillsDir, skillName);
+      await removeDirectory(targetSkillDir);
       removed.push(skillName);
     } catch {
       // Skill may not exist, ignore
@@ -546,7 +464,7 @@ export async function updateSkills(
   for (const skillName of updatableBaseSkills) {
     const sourceSkillDir = path.join(getSkillsDir(), skillName);
     const sourceHash = await hashDirectory(sourceSkillDir);
-    const paths = resolveSkillPaths(projectDir, agentInstallation.skillsDir, agentInstallation.id, skillName, sourceSkillDir);
+    const paths = resolveSkillPaths(projectDir, agentInstallation.skillsDir, skillName, sourceSkillDir);
     const installedHash = await hashInstalledSkill(paths);
     const previousState = previousManaged[skillName];
 
@@ -595,7 +513,6 @@ export async function updateSkills(
       projectDir,
       skillsDir: agentInstallation.skillsDir,
       skills: skillsToInstall,
-      agentId: agentInstallation.id,
     })
     : [];
 

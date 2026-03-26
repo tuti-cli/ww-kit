@@ -10,8 +10,6 @@ import {
   buildManagedSubagentsState,
   getAvailableSkills,
   partitionSkills,
-  type SkillUpdateEntry,
-  type SubagentUpdateEntry,
   updateSkills,
   updateSubagents,
 } from '../../core/installer.js';
@@ -75,29 +73,29 @@ function isNewerVersion(latest: string, current: string): boolean {
 }
 
 async function getLatestVersion(): Promise<string | null> {
-  const versionCheck = await getNpmVersionCheckResult('ai-factory', getCurrentVersion());
+  const versionCheck = await getNpmVersionCheckResult('ww-kit', getCurrentVersion());
   return versionCheck.latestVersion;
 }
 
 function getInstallCommand(version: string): string {
   try {
     const whichCmd = process.platform === 'win32' ? 'where' : 'which';
-    const binPath = execSync(`${whichCmd} ai-factory`, {
+    const binPath = execSync(`${whichCmd} ww-kit`, {
       encoding: 'utf-8',
       timeout: 5000,
       stdio: ['pipe', 'pipe', 'pipe'],
     }).split('\n')[0].trim();
     const realPath = realpathSync(binPath).replaceAll('\\', '/');
 
-    if (realPath.includes('.bun/')) return `bun add -g ai-factory@${version}`;
-    if (realPath.includes('/mise/')) return `mise use -g npm:ai-factory@${version}`;
-    if (realPath.includes('/volta/')) return `volta install ai-factory@${version}`;
-    if (realPath.includes('/pnpm/')) return `pnpm add -g ai-factory@${version}`;
-    if (realPath.includes('/yarn/')) return `yarn global add ai-factory@${version}`;
+    if (realPath.includes('.bun/')) return `bun add -g ww-kit@${version}`;
+    if (realPath.includes('/mise/')) return `mise use -g npm:ww-kit@${version}`;
+    if (realPath.includes('/volta/')) return `volta install ww-kit@${version}`;
+    if (realPath.includes('/pnpm/')) return `pnpm add -g ww-kit@${version}`;
+    if (realPath.includes('/yarn/')) return `yarn global add ww-kit@${version}`;
   } catch {
     // Binary not found or symlink resolution failed, default to npm
   }
-  return `npm install -g ai-factory@${version}`;
+  return `npm install -g ww-kit@${version}`;
 }
 
 async function selfUpdate(currentVersion: string): Promise<boolean> {
@@ -108,11 +106,11 @@ async function selfUpdate(currentVersion: string): Promise<boolean> {
   }
 
   if (!isNewerVersion(latestVersion, currentVersion)) {
-    console.log(chalk.dim('ai-factory is up to date\n'));
+    console.log(chalk.dim('ww-kit is up to date\n'));
     return false;
   }
 
-  console.log(chalk.cyan(`📦 New version available: ${currentVersion} → ${latestVersion}`));
+  console.log(chalk.cyan(`New version available: ${currentVersion} → ${latestVersion}`));
 
   if (!process.stdin.isTTY) {
     console.log(chalk.dim('Non-interactive mode — skipping self-update\n'));
@@ -122,7 +120,7 @@ async function selfUpdate(currentVersion: string): Promise<boolean> {
   const {shouldUpdate} = await inquirer.prompt([{
     type: 'confirm',
     name: 'shouldUpdate',
-    message: `Update ai-factory to ${latestVersion}?`,
+    message: `Update ww-kit to ${latestVersion}?`,
     default: true,
   }]);
 
@@ -136,11 +134,11 @@ async function selfUpdate(currentVersion: string): Promise<boolean> {
     console.log(chalk.dim(`\n$ ${installCmd}`));
     execSync(installCmd, {stdio: 'inherit'});
     console.log(chalk.green(`\n✓ Updated to ${latestVersion}`));
-    console.log(chalk.cyan('Please re-run `ai-factory update` to update skills with the new version.\n'));
-    process.exitCode = 75; // EX_TEMPFAIL — signals caller to re-run
+    console.log(chalk.cyan('Please re-run `ww-kit update` to update skills with the new version.\n'));
+    process.exitCode = 75;
     return true;
   } catch (error) {
-    console.log(chalk.yellow(`⚠ Self-update failed: ${(error as Error).message}`));
+    console.log(chalk.yellow(`Self-update failed: ${(error as Error).message}`));
     return false;
   }
 }
@@ -149,13 +147,13 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
   const projectDir = process.cwd();
   const force = Boolean(options.force);
 
-  console.log(chalk.bold.blue('\n🏭 AI Factory - Update Skills\n'));
+  console.log(chalk.bold.blue('\n⚡ ww-kit — Update Skills\n'));
 
   const config = await loadConfig(projectDir);
 
   if (!config) {
-    console.log(chalk.red('Error: No .ai-factory.json found.'));
-    console.log(chalk.dim('Run "ai-factory init" to set up your project first.'));
+    console.log(chalk.red('Error: No .ww-kit.json found.'));
+    console.log(chalk.dim('Run "ww-kit init" to set up your project first.'));
     process.exit(1);
   }
 
@@ -170,7 +168,7 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
   const extensions = config.extensions ?? [];
 
   if (force) {
-    console.log(chalk.yellow('⚠ Force mode enabled: clean reinstall of installed base skills\n'));
+    console.log(chalk.yellow('Force mode enabled: clean reinstall of installed base skills\n'));
   }
 
   if (extensions.length > 0) {
@@ -180,7 +178,7 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
       force,
       log: (level, message) => {
         if (level === 'warn') {
-          console.log(chalk.yellow(`  ⚠ ${message}`));
+          console.log(chalk.yellow(`  ${message}`));
         } else {
           console.log(chalk.dim(`  ${message}`));
         }
@@ -195,16 +193,16 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
 
     for (const r of extensionSummary.skipped) {
       if (r.failureReason === 'rate-limited') {
-        console.log(chalk.yellow(`  ⚠ ${r.name}: GitHub API rate limited`));
+        console.log(chalk.yellow(`  ${r.name}: GitHub API rate limited`));
       } else if (r.failureReason === 'lookup-failed') {
-        console.log(chalk.yellow(`  ⚠ ${r.name}: extension version check failed`));
+        console.log(chalk.yellow(`  ${r.name}: extension version check failed`));
       } else if (r.failureReason === 'source-type-requires-force') {
         console.log(chalk.dim(`  - ${r.name}: source type requires --force`));
       }
     }
 
     for (const r of extensionSummary.failed) {
-      console.log(chalk.yellow(`  ⚠ ${r.name}: ${r.failureReason}`));
+      console.log(chalk.yellow(`  ${r.name}: ${r.failureReason}`));
     }
 
     console.log(
@@ -214,41 +212,34 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
     );
   }
 
-  console.log(chalk.dim('Updating skills and agent assets...\n'));
+  console.log(chalk.dim('Updating skills and subagents...\n'));
 
   try {
+    const agent = config.agents[0];
     const availableSkills = await getAvailableSkills();
-    const skillEntriesByAgent = new Map<string, SkillUpdateEntry[]>();
-    const subagentEntriesByAgent = new Map<string, SubagentUpdateEntry[]>();
-
     const allReplacedSkills = collectReplacedSkills(extensions);
 
     if (allReplacedSkills.size > 0) {
       console.log(chalk.dim(`Skipping replaced skills: ${[...allReplacedSkills].join(', ')}`));
     }
 
-    for (const agent of config.agents) {
-      const result = await updateSkills(agent, projectDir, {
-        excludeSkills: [...allReplacedSkills],
-        force,
-      });
-      agent.installedSkills = result.installedSkills;
-      skillEntriesByAgent.set(agent.id, result.entries);
+    const skillResult = await updateSkills(agent, projectDir, {
+      excludeSkills: [...allReplacedSkills],
+      force,
+    });
+    agent.installedSkills = skillResult.installedSkills;
 
-      const subagentResult = await updateSubagents(agent, projectDir, { force });
-      agent.installedSubagents = subagentResult.installedSubagents;
-      subagentEntriesByAgent.set(agent.id, subagentResult.entries);
-    }
+    const subagentResult = await updateSubagents(agent, projectDir, { force });
+    agent.installedSubagents = subagentResult.installedSubagents;
 
     // Re-install replacement skills from extensions
-    // Fix 3: If manifest fails to load, fall back to installing the base skill
     const failedReplacements: string[] = [];
     for (const ext of extensions) {
       if (!ext.replacedSkills?.length) continue;
       const extensionDir = path.join(getExtensionsDir(projectDir), ext.name);
       const manifest = await loadExtensionManifest(extensionDir);
       if (!manifest?.replaces) {
-        console.log(chalk.yellow(`⚠ Extension "${ext.name}" manifest missing — restoring base skills: ${ext.replacedSkills.join(', ')}`));
+        console.log(chalk.yellow(`Extension "${ext.name}" manifest missing — restoring base skills: ${ext.replacedSkills.join(', ')}`));
         failedReplacements.push(...ext.replacedSkills);
         ext.replacedSkills = [];
         continue;
@@ -260,28 +251,21 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
         .filter(([, baseSkill]) => ext.replacedSkills!.includes(baseSkill))
         .map(([extPath]) => extPath);
 
-      // Detect replacedSkills in config that no longer exist in manifest.replaces
       const orphanedReplacements = ext.replacedSkills!.filter(s => !manifestBaseSkills.has(s));
       if (orphanedReplacements.length > 0) {
-        console.log(chalk.yellow(`⚠ Extension "${ext.name}" no longer replaces: ${orphanedReplacements.join(', ')}`));
+        console.log(chalk.yellow(`Extension "${ext.name}" no longer replaces: ${orphanedReplacements.join(', ')}`));
         failedReplacements.push(...orphanedReplacements);
         ext.replacedSkills = ext.replacedSkills!.filter(s => manifestBaseSkills.has(s));
       }
 
       if (replacePaths.length > 0) {
         const results = await installExtensionSkillsForAllAgents(projectDir, config.agents, extensionDir, replacePaths, nameOverrides);
-
-        // Detect replacements that failed to install on all agents
-        const agentCount = config.agents.length;
         for (const [extPath, baseSkill] of Object.entries(manifest.replaces)) {
           if (!ext.replacedSkills!.includes(baseSkill)) continue;
           if (!replacePaths.includes(extPath)) continue;
-          let successCount = 0;
-          for (const installed of results.values()) {
-            if (installed.includes(baseSkill)) successCount++;
-          }
-          if (successCount < agentCount) {
-            console.log(chalk.yellow(`⚠ Extension "${ext.name}" replacement "${baseSkill}" failed to install — restoring base skill`));
+          const installed = results.get(agent.id) ?? [];
+          if (!installed.includes(baseSkill)) {
+            console.log(chalk.yellow(`Extension "${ext.name}" replacement "${baseSkill}" failed to install — restoring base skill`));
             failedReplacements.push(baseSkill);
             ext.replacedSkills = ext.replacedSkills!.filter(s => s !== baseSkill);
           }
@@ -289,8 +273,6 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
       }
     }
 
-    // Install base skills that couldn't be replaced due to broken extensions
-    // But only if no other extension still replaces them
     if (failedReplacements.length > 0) {
       const stillReplacedByOthers = collectReplacedSkills(extensions);
       const toRestore = failedReplacements.filter(s => !stillReplacedByOthers.has(s));
@@ -302,140 +284,94 @@ export async function updateCommand(options: UpdateCommandOptions = {}): Promise
     // Re-apply extension injections
     if (config.extensions?.length) {
       let totalInjections = 0;
-      for (const agent of config.agents) {
-        totalInjections += await applyExtensionInjections(projectDir, agent, config.extensions!);
-      }
+      totalInjections += await applyExtensionInjections(projectDir, agent, config.extensions!);
       if (totalInjections > 0) {
         console.log(chalk.green(`✓ Re-applied ${totalInjections} extension injection(s)`));
       }
     }
 
-    // Rebuild managed state after final update + replacement + injection pipeline.
+    // Rebuild managed state
     const finalReplacedSkills = collectReplacedSkills(extensions);
-    for (const agent of config.agents) {
-      const { base: baseSkills } = partitionSkills(agent.installedSkills);
-      const managedBaseSkills = baseSkills.filter(skill => availableSkills.includes(skill) && !finalReplacedSkills.has(skill));
-      agent.managedSkills = await buildManagedSkillsState(projectDir, agent, managedBaseSkills);
-      if (agent.subagentsDir) {
-        agent.managedSubagents = await buildManagedSubagentsState(projectDir, agent, agent.installedSubagents ?? []);
-      }
+    const { base: baseSkills } = partitionSkills(agent.installedSkills);
+    const managedBaseSkills = baseSkills.filter(skill => availableSkills.includes(skill) && !finalReplacedSkills.has(skill));
+    agent.managedSkills = await buildManagedSkillsState(projectDir, agent, managedBaseSkills);
+    if (agent.subagentsDir) {
+      agent.managedSubagents = await buildManagedSubagentsState(projectDir, agent, agent.installedSubagents ?? []);
     }
 
     config.version = currentVersion;
     await saveConfig(projectDir, config);
 
-    console.log(chalk.green('✓ Skills and agent assets updated successfully'));
+    console.log(chalk.green('✓ Skills and subagents updated successfully'));
     console.log(chalk.green('✓ Configuration updated'));
 
-    for (const agent of config.agents) {
-      const entries = skillEntriesByAgent.get(agent.id) ?? [];
-      const grouped = groupAndSortEntriesByStatus(entries, e => e.skill);
-      const changedWithContextWarnings: string[] = [];
+    // Print skill update summary
+    const grouped = groupAndSortEntriesByStatus(skillResult.entries, e => e.skill);
+    const changedWithContextWarnings: string[] = [];
 
+    for (const entry of grouped.changed) {
+      const skillContextPath = path.join(projectDir, '.ww-kit', 'skill-context', entry.skill, 'SKILL.md');
+      if (await fileExists(skillContextPath)) {
+        changedWithContextWarnings.push(entry.skill);
+      }
+    }
+
+    console.log(chalk.bold('\nSkills:'));
+    console.log(chalk.dim(`  changed: ${grouped.changed.length}`));
+    console.log(chalk.dim(`  unchanged: ${grouped.unchanged.length}`));
+    console.log(chalk.dim(`  skipped: ${grouped.skipped.length}`));
+    console.log(chalk.dim(`  removed: ${grouped.removed.length}`));
+
+    if (grouped.changed.length > 0) {
+      console.log(chalk.bold('  Changed:'));
       for (const entry of grouped.changed) {
-        const skillContextPath = path.join(projectDir, '.ai-factory', 'skill-context', entry.skill, 'SKILL.md');
-        if (await fileExists(skillContextPath)) {
-          changedWithContextWarnings.push(entry.skill);
-        }
+        console.log(chalk.dim(`    - ${entry.skill} (${formatReason(entry.reason)})`));
       }
+    }
 
-      console.log(chalk.bold(`\n[${agent.id}] Status:`));
-      console.log(chalk.dim(`  changed: ${grouped.changed.length}`));
-      console.log(chalk.dim(`  unchanged: ${grouped.unchanged.length}`));
-      console.log(chalk.dim(`  skipped: ${grouped.skipped.length}`));
-      console.log(chalk.dim(`  removed: ${grouped.removed.length}`));
+    if (grouped.skipped.length > 0) {
+      console.log(chalk.bold('  Skipped:'));
+      for (const entry of grouped.skipped) {
+        console.log(chalk.dim(`    - ${entry.skill} (${formatReason(entry.reason)})`));
+      }
+    }
 
-      if (grouped.changed.length > 0) {
+    if (grouped.removed.length > 0) {
+      console.log(chalk.bold('  Removed:'));
+      for (const entry of grouped.removed) {
+        console.log(chalk.dim(`    - ${entry.skill} (${formatReason(entry.reason)})`));
+      }
+    }
+
+    if (changedWithContextWarnings.length > 0) {
+      console.log(chalk.yellow('  WARN: skill-context override may need review for changed skills:'));
+      for (const skill of changedWithContextWarnings) {
+        console.log(chalk.yellow(`    - ${skill} (.ww-kit/skill-context/${skill}/SKILL.md)`));
+      }
+    }
+
+    // Print subagent update summary
+    const groupedSubagents = groupAndSortEntriesByStatus(subagentResult.entries, e => e.subagent);
+
+    if (agent.subagentsDir || subagentResult.entries.length > 0) {
+      console.log(chalk.bold('Subagents:'));
+      console.log(chalk.dim(`  changed: ${groupedSubagents.changed.length}`));
+      console.log(chalk.dim(`  unchanged: ${groupedSubagents.unchanged.length}`));
+      console.log(chalk.dim(`  removed: ${groupedSubagents.removed.length}`));
+
+      if (groupedSubagents.changed.length > 0) {
         console.log(chalk.bold('  Changed:'));
-        for (const entry of grouped.changed) {
-          console.log(chalk.dim(`    - ${entry.skill} (${formatReason(entry.reason)})`));
+        for (const entry of groupedSubagents.changed) {
+          console.log(chalk.dim(`    - ${entry.subagent} (${formatReason(entry.reason)})`));
         }
       }
+    }
 
-      if (grouped.skipped.length > 0) {
-        console.log(chalk.bold('  Skipped:'));
-        for (const entry of grouped.skipped) {
-          console.log(chalk.dim(`    - ${entry.skill} (${formatReason(entry.reason)})`));
-        }
-      }
-
-      if (grouped.removed.length > 0) {
-        console.log(chalk.bold('  Removed:'));
-        for (const entry of grouped.removed) {
-          console.log(chalk.dim(`    - ${entry.skill} (${formatReason(entry.reason)})`));
-        }
-      }
-
-      const recoveryEntries = grouped.changed.filter(entry => [
-        'missing-managed-state',
-        'missing-installed-artifact',
-        'source-missing',
-      ].includes(entry.reason));
-      if (recoveryEntries.length > 0) {
-        console.log(chalk.yellow('  WARN: managed state recovered for:'));
-        for (const entry of recoveryEntries) {
-          console.log(chalk.yellow(`    - ${entry.skill} (${formatReason(entry.reason)})`));
-        }
-      }
-
-      if (changedWithContextWarnings.length > 0) {
-        console.log(chalk.yellow('  WARN: skill-context override may need review for changed skills:'));
-        for (const skill of changedWithContextWarnings) {
-          console.log(chalk.yellow(`    - ${skill} (.ai-factory/skill-context/${skill}/SKILL.md)`));
-        }
-      }
-
-      const subagentEntries = subagentEntriesByAgent.get(agent.id) ?? [];
-      if (agent.subagentsDir || subagentEntries.length > 0) {
-        const groupedSubagents = groupAndSortEntriesByStatus(subagentEntries, e => e.subagent);
-
-        console.log(chalk.bold(`[${agent.id}] Subagents:`));
-        console.log(chalk.dim(`  changed: ${groupedSubagents.changed.length}`));
-        console.log(chalk.dim(`  unchanged: ${groupedSubagents.unchanged.length}`));
-        console.log(chalk.dim(`  skipped: ${groupedSubagents.skipped.length}`));
-        console.log(chalk.dim(`  removed: ${groupedSubagents.removed.length}`));
-
-        if (groupedSubagents.changed.length > 0) {
-          console.log(chalk.bold('  Changed:'));
-          for (const entry of groupedSubagents.changed) {
-            console.log(chalk.dim(`    - ${entry.subagent} (${formatReason(entry.reason)})`));
-          }
-        }
-
-        if (groupedSubagents.skipped.length > 0) {
-          console.log(chalk.bold('  Skipped:'));
-          for (const entry of groupedSubagents.skipped) {
-            console.log(chalk.dim(`    - ${entry.subagent} (${formatReason(entry.reason)})`));
-          }
-        }
-
-        if (groupedSubagents.removed.length > 0) {
-          console.log(chalk.bold('  Removed:'));
-          for (const entry of groupedSubagents.removed) {
-            console.log(chalk.dim(`    - ${entry.subagent} (${formatReason(entry.reason)})`));
-          }
-        }
-
-        const recoveredSubagents = groupedSubagents.changed.filter(entry => [
-          'missing-managed-state',
-          'missing-installed-artifact',
-          'source-missing',
-        ].includes(entry.reason));
-        if (recoveredSubagents.length > 0) {
-          console.log(chalk.yellow('  WARN: managed subagent state recovered for:'));
-          for (const entry of recoveredSubagents) {
-            console.log(chalk.yellow(`    - ${entry.subagent} (${formatReason(entry.reason)})`));
-          }
-        }
-      }
-
-      const { custom: customSkills } = partitionSkills(agent.installedSkills);
-
-      if (customSkills.length > 0) {
-        console.log(chalk.bold(`[${agent.id}] Custom skills (preserved):`));
-        for (const skill of customSkills) {
-          console.log(chalk.dim(`  - ${skill}`));
-        }
+    const { custom: customSkills } = partitionSkills(agent.installedSkills);
+    if (customSkills.length > 0) {
+      console.log(chalk.bold('Custom skills (preserved):'));
+      for (const skill of customSkills) {
+        console.log(chalk.dim(`  - ${skill}`));
       }
     }
     console.log('');

@@ -1,6 +1,6 @@
 ---
 name: loop-orchestrator
-description: Route reflex-loop execution to the next role based on run state, stop guards, and last evaluation. Use proactively within /aif-loop when deciding the next step.
+description: Route reflex-loop execution to the next role based on run state, stop guards, and last evaluation. Use proactively within /ww-loop when deciding the next step.
 tools: Read, Glob, Grep
 model: sonnet
 permissionMode: plan

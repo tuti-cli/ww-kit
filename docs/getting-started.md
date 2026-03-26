@@ -2,9 +2,9 @@
 
 # Getting Started
 
-## What is AI Factory?
+## What is ww-kit?
 
-AI Factory is a **stack-agnostic** CLI tool and skill system that works with any language, framework, or platform:
+ww-kit is a **stack-agnostic** CLI tool and skill system that works with any language, framework, or platform:
 
 1. **Analyzes your project** — understands your codebase structure and conventions
 2. **Installs relevant skills** — downloads from [skills.sh](https://skills.sh) or generates custom ones
@@ -13,7 +13,7 @@ AI Factory is a **stack-agnostic** CLI tool and skill system that works with any
 
 ## Supported Agents
 
-AI Factory works with any AI coding agent. During `ai-factory init`, you choose one or more target agents and skills are installed to each agent's correct directory with paths adapted automatically:
+ww-kit works with any AI coding agent. During `ww-kit init`, you choose one or more target agents and skills are installed to each agent's correct directory with paths adapted automatically:
 
 | Agent | Config Directory | Skills Directory |
 |-------|-----------------|-----------------|
@@ -33,68 +33,68 @@ AI Factory works with any AI coding agent. During `ai-factory init`, you choose 
 | Qwen Code | `.qwen/` | `.qwen/skills/` |
 | Universal / Other | `.agents/` | `.agents/skills/` |
 
-When Claude Code is selected, AI Factory also installs bundled Claude subagents into `.claude/agents/` and tracks them in `.ai-factory.json`. This is Claude-only and is documented in [Subagents](subagents.md).
+When Claude Code is selected, ww-kit also installs bundled Claude subagents into `.claude/agents/` and tracks them in `.ww-kit.json`. This is Claude-only and is documented in [Subagents](subagents.md).
 
 MCP server configuration is supported for Claude Code, Cursor, GitHub Copilot, Roo Code, Kilo Code, OpenCode, and Qwen Code. Other agents get skills installed with correct paths but without MCP auto-configuration.
 
 ## Your First Project
 
 ```bash
-# 1. Install AI Factory
-npm install -g ai-factory
+# 1. Install ww-kit
+npm install -g ww-kit
 
 # 2. Go to your project
 cd my-project
 
 # 3. Initialize — pick agents, install skills, configure MCP
-ai-factory init
+ww-kit init
 
 # 4. Open your AI agent (Claude Code, Cursor, etc.) and run:
-/aif
+/ww
 
 # 5. Optional discovery before planning
-/aif-explore Add user authentication with OAuth
+/ww-explore Add user authentication with OAuth
 
 # 6. Start building
-/aif-plan Add user authentication with OAuth
+/ww-plan Add user authentication with OAuth
 ```
 
-If scope is unclear, start with `/aif-explore` (optionally save results to `.ai-factory/RESEARCH.md`); if the task is clear but the answer must be strictly verified, use `/aif-grounded`; if the direction is already clear, jump straight to `/aif-plan`. From there, AI Factory creates a branch (full mode), builds a plan, and you run `/aif-implement` to execute it step by step.
+If scope is unclear, start with `/ww-explore` (optionally save results to `.ww-kit/RESEARCH.md`); if the task is clear but the answer must be strictly verified, use `/ww-grounded`; if the direction is already clear, jump straight to `/ww-plan`. From there, ww-kit creates a branch (full mode), builds a plan, and you run `/ww-do` to execute it step by step.
 
 ## CLI Commands
 
 ```bash
 # Initialize project
-ai-factory init
+ww-kit init
 
 # Update skills to latest version (also checks for CLI updates)
-ai-factory update
+ww-kit update
 
 # Force clean reinstall of currently installed base skills
-ai-factory update --force
+ww-kit update --force
 
 # Migrate existing skills from v1 naming to v2 naming
-ai-factory upgrade
+ww-kit upgrade
 
 # Install an extension (local path, git URL, or npm package)
-ai-factory extension add ./my-extension
+ww-kit extension add ./my-extension
 
 # List installed extensions
-ai-factory extension list
+ww-kit extension list
 
 # Update extensions from their sources
-ai-factory extension update
+ww-kit extension update
 
 # Update a specific extension (use --force to refresh unchanged versions)
-ai-factory extension update my-extension --force
+ww-kit extension update my-extension --force
 
 # Remove extension
-ai-factory extension remove my-extension
+ww-kit extension remove my-extension
 ```
 
-For v1 -> v2 migration, run `ai-factory upgrade` to rename old skills to the new `aif-*` prefix.
+For v1 -> v2 migration, run `ww-kit upgrade` to rename old skills to the new `aif-*` prefix.
 
-`ai-factory update` now:
+`ww-kit update` now:
 - Checks for extension updates from their sources (npm, GitHub, etc.) before updating base skills
 - Prints per-agent status buckets for base skills (`changed`, `unchanged`, `skipped`, `removed`)
 - For Claude Code, also refreshes managed `.claude/agents/` subagents and prints a separate `Subagents` status block
@@ -105,4 +105,4 @@ For v1 -> v2 migration, run `ai-factory upgrade` to rename old skills to the new
 - [Development Workflow](workflow.md) — understand the full flow from plan to commit
 - [Reflex Loop](loop.md) — run iterative generate → evaluate → critique → refine cycles
 - [Core Skills](skills.md) — all available slash commands
-- [Configuration](configuration.md) — customize `.ai-factory.json` and MCP servers
+- [Configuration](configuration.md) — customize `.ww-kit.json` and MCP servers

@@ -39,7 +39,7 @@ They receive a system prompt from a built-in agent type (Explore, Plan, general-
 
 1. **Simple read-only tasks** — e.g. `loop-test-prep`, `loop-perf-prep`, `loop-invariant-prep` could theoretically be skills with `context: fork` + `agent: Explore`. But we lose `background: true` and `maxTurns`.
 
-2. **Inline skills (no fork)** — `aif-plan`, `aif-implement`, etc. already work as inline skills. They extend context rather than isolate — this is the correct approach.
+2. **Inline skills (no fork)** — `ww-plan`, `ww-do`, etc. already work as inline skills. They extend context rather than isolate — this is the correct approach.
 
 ## Conclusion
 
