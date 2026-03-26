@@ -8,40 +8,31 @@ ww-kit has two phases: **configuration** (one-time project setup) and the **deve
 
 Run once per project. Sets up context files that all workflow skills depend on.
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       PROJECT CONFIGURATION                             │
-└─────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Setup["One-Time Setup"]
+        A(["ww-kit init"]):::cmd -->|"launches"| B["Claude Code"]
+        B -->|"runs"| C(["/ww — setup context"]):::cmd
+        C -->|"creates"| D["DESCRIPTION.md\nAGENTS.md\nSkills + MCP"]:::artifact
+        D --> E(["/ww-arch — define architecture"]):::cmd
+        E -->|"creates"| F["ARCHITECTURE.md"]:::artifact
+    end
 
-  ┌──────────────┐      ┌──────────────┐      ┌──────────────────────────┐
-  │              │      │   claude     │      │                          │
-  │ ww-kit       │ ───▶ │   Claude     │ ───▶│      /ww                │
-  │    init      │      │    Code      │      │   (setup context)        │
-  │              │      │              │      │                          │
-  └──────────────┘      └──────────────┘      │  DESCRIPTION.md          │
-                                              │  AGENTS.md               │
-                                              │  Skills + MCP configured │
-                                              └────────────┬─────────────┘
-                                                           │
-                                                           ▼
-                                              ┌──────────────────────────┐
-                                              │ /ww-arch        │
-                                              │  (ARCHITECTURE.md)       │
-                                              └────────────┬─────────────┘
-                                                           │
-                                         ┌─────────────────┼─────────────────┐
-                                         │                 │                 │
-                                         ▼                 ▼                 ▼
-                                  ┌───────────────┐  ┌──────────────┐  ┌─────────────┐
-                                  │ /ww-rules    │  │ /wws-roadmap │  │  /wws-docs  │
-                                  │ (optional)    │  │(recommended) │  │ (optional)  │
-                                  └───────────────┘  └──────────────┘  └─────────────┘
+    subgraph Optional["Optional Configuration"]
+        G(["/ww-rules\n project rules"]):::optional
+        H(["/wws-roadmap\n strategic plan"]):::recommended
+        I(["/wws-docs\n documentation"]):::optional
+        J(["/wws-docker\n containers"]):::optional
+        K(["/wws-ci\n CI pipeline"]):::optional
+        L(["/ww-build-automation\n build setup"]):::optional
+    end
 
-                                  ┌───────────────┐  ┌──────────────┐  ┌──────────────┐
-                                  │ /wws-docker│  │  /wws-ci     │  │ /ww-build-  │
-                                  │ (optional)    │  │ (optional)   │  │  automation  │
-                                  └───────────────┘  └──────────────┘  │ (optional)   │
-                                                                       └──────────────┘
+    F --> G & H & I & J & K & L
+
+    classDef cmd fill:#4a90d9,stroke:#2c5f8a,color:#fff
+    classDef artifact fill:#f5f5dc,stroke:#8b8b6a,color:#333
+    classDef optional fill:#b0c4de,stroke:#6a7f99,color:#333,stroke-dasharray:5 5
+    classDef recommended fill:#90ee90,stroke:#4a7f4a,color:#333
 ```
 
 ## Development Workflow
@@ -54,101 +45,60 @@ Reliability gate: use `/ww-grounded` when the main problem is not discovery but 
 
 If you want exploration results to survive `/clear` and feed directly into planning, ask `/ww-explore` to save them to `.ww-kit/RESEARCH.md`.
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       DEVELOPMENT WORKFLOW                              │
-└─────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Discovery["Optional: Discovery"]
+        EX(["/ww-explore\n clarify scope"]):::optional
+        GR(["/ww-grounded\n verify facts"]):::optional
+    end
 
-   Need to think first?                         Need certainty first?
-          │                                             │
-          ▼                                             ▼
-   ┌───────────────┐                            ┌────────────────┐
-   │ /ww-explore  │                            │ /ww-grounded  │
-   │ clarify scope │                            │ verify facts   │
-   │ compare paths │                            │ reject guesses │
-   └───────┬───────┘                            └────────┬───────┘
-           │                                             │
-           └──────────────────────┬──────────────────────┘
-                                  ▼
+    subgraph Planning["Planning"]
+        PL(["/ww-plan\n fast | full"]):::cmd
+        IMP(["/ww-improve\n refine plan"]):::optional
+    end
 
-               ┌──────────────────────────┐                         ┌──────────────┐
-               │                          │                         │              │
-               │    /ww-plan             │                         │ /ww-fix     │
-               │                          │                         │              │
-               │  fast → no branch,       │                         │              │
-               │         PLAN.md          │                         │ Bug fixes    │
-               │  full → git branch,      │                         │ Optional plan│
-               │         plans/<br>.md    │                         │ With logging │
-               │                          │                         │              │
-               └────────────┬─────────────┘                         └───────┬──────┘
-                            │                                               │
-                            │                                               ▼
-                            │                                      ┌──────────────────┐
-                            │                                      │ .ww-kit/     │
-                            │                                      │   patches/       │
-                            │                                      │ Self-improvement │
-                            └───────────┬──────────────────────────└────────┬─────────┘
-                                        │                                   │
-                                        ▼                                   │
-                             ┌─────────────────────┐                        │
-                             │                     │                        │
-                             │ /ww-improve        │                        │
-                             │    (optional)       │                        │
-                             │                     │                        │
-                             │ Refine plan with    │                        │
-                             │ deeper analysis     │                        │
-                             │                     │                        │
-                             └──────────┬──────────┘                        │
-                                        │                                   │
-                                        ▼                                   │
-                             ┌──────────────────────┐                       │
-                             │                      │◀── skill-context  ────┘
-                             │ /ww-do       │       (+limited patch fallback)
-                             │ ──── error?          │
-                             │  ──▶ /ww-fix        │
-                             │  Execute tasks       │
-                             │  Commit checkpoints  │
-                             │                      │
-                             └──────────┬───────────┘
-                                        │
-                                        ▼
-                             ┌──────────────────────────────────────┐
-                             │                                      │
-                             │ /ww-verify                          │
-                             │    (optional)                        │
-                             │                                      │
-                             │ Check completeness                   │
-                             │ Build / test / lint                  │
-                             │    ↓                                 │
-                             │ → /wws-security            │
-                             │ → /ww-review                        │
-                             │                                      │
-                             └──────────────────┬───────────────────┘
-                                        │
-                                        ▼
-                             ┌─────────────────────┐
-                             │                     │
-                             │ /ww-commit         │
-                             │                     │
-                             └──────────┬──────────┘
-                                        │
-                        ┌───────────────┴───────────────┐
-                        │                               │
-                        ▼                               ▼
-                   More work?                        Done!
-                   Loop back ↑                          │
-                                                        ▼
-                                             ┌─────────────────────┐
-                                             │                     │
-                                             │ /ww-evolve         │
-                                             │                     │
-                                             │ Reads new patches + │
-                                             │ project context     │
-                                             │       ↓             │
-                                             │ Improves skills     │
-                                             │                     │
-                                             └─────────────────────┘
+    subgraph BugFix["Bug Fixes"]
+        FIX(["/ww-fix\n diagnose + patch"]):::cmd
+        PATCHES[".ww-kit/patches/\n self-improvement"]:::artifact
+    end
 
+    subgraph Execution["Implementation"]
+        DO(["/ww-do\n execute tasks"]):::cmd
+    end
+
+    subgraph Quality["Quality Gates"]
+        VER(["/ww-verify\n check completeness"]):::optional
+        SEC(["/wws-security\n security scan"]):::optional
+        REV(["/ww-review\n code review"]):::optional
+    end
+
+    subgraph Finalize["Finalize"]
+        COM(["/ww-commit\n conventional commit"]):::cmd
+        DECIDE{"More work?"}
+        EVOLVE(["/ww-evolve\n improve skills"]):::cmd
+    end
+
+    EX -->|"scope clarified"| PL
+    GR -->|"facts verified"| PL
+    PL --> IMP --> DO
+    PL -->|"skip improve"| DO
+
+    FIX -->|"logs patch"| PATCHES
+    PATCHES -.->|"skill-context"| DO
+
+    DO -->|"error"| FIX
+    DO --> VER
+    VER --> SEC & REV
+    VER -->|"gaps found"| FIX
+    SEC & REV --> COM
+
+    COM --> DECIDE
+    DECIDE -->|"Yes"| PL
+    DECIDE -->|"Done"| EVOLVE
+
+    classDef cmd fill:#4a90d9,stroke:#2c5f8a,color:#fff
+    classDef artifact fill:#f5f5dc,stroke:#8b8b6a,color:#333
+    classDef optional fill:#b0c4de,stroke:#6a7f99,color:#333,stroke-dasharray:5 5
 ```
 
 ## When to Use What?
