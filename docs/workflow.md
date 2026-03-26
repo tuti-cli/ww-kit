@@ -10,29 +10,42 @@ Run once per project. Sets up context files that all workflow skills depend on.
 
 ```mermaid
 flowchart TD
-    subgraph Setup["One-Time Setup"]
-        A(["ww-kit init"]):::cmd -->|"launches"| B["Claude Code"]
-        B -->|"runs"| C(["/ww — setup context"]):::cmd
-        C -->|"creates"| D["DESCRIPTION.md\nAGENTS.md\nSkills + MCP"]:::artifact
-        D --> E(["/ww-arch — define architecture"]):::cmd
-        E -->|"creates"| F["ARCHITECTURE.md"]:::artifact
+    subgraph SETUP["STEP 1: One-Time Project Setup"]
+        A(["ww-kit init"]):::cmd
+        B["Claude Code\nor any AI agent"]:::process
+        C(["/ww"]):::cmd
+        D["DESCRIPTION.md\nAGENTS.md\nSkills + MCP"]:::artifact
+        E(["/ww-arch"]):::cmd
+        F["ARCHITECTURE.md"]:::artifact
+
+        A -->|"launches"| B
+        B -->|"runs"| C
+        C -->|"creates"| D
+        D --> E
+        E -->|"creates"| F
     end
 
-    subgraph Optional["Optional Configuration"]
-        G(["/ww-rules\n project rules"]):::optional
-        H(["/wws-roadmap\n strategic plan"]):::recommended
-        I(["/wws-docs\n documentation"]):::optional
-        J(["/wws-docker\n containers"]):::optional
-        K(["/wws-ci\n CI pipeline"]):::optional
-        L(["/ww-build-automation\n build setup"]):::optional
+    subgraph CONFIG["STEP 2: Configure Project (pick what you need)"]
+        H(["/wws-roadmap"]):::recommended
+        G(["/ww-rules"]):::optional
+        I(["/wws-docs"]):::optional
+        J(["/wws-docker"]):::optional
+        K(["/wws-ci"]):::optional
+        L(["/ww-build-automation"]):::optional
     end
 
-    F --> G & H & I & J & K & L
+    F --> H
+    F --> G
+    F --> I
+    F --> J
+    F --> K
+    F --> L
 
-    classDef cmd fill:#4a90d9,stroke:#2c5f8a,color:#fff
-    classDef artifact fill:#f5f5dc,stroke:#8b8b6a,color:#333
-    classDef optional fill:#b0c4de,stroke:#6a7f99,color:#333,stroke-dasharray:5 5
-    classDef recommended fill:#90ee90,stroke:#4a7f4a,color:#333
+    classDef cmd fill:#2C3E50,stroke:#34495E,stroke-width:2px,color:white
+    classDef process fill:#F0F0F0,stroke:#333,stroke-width:2px,color:black
+    classDef artifact fill:#FFE4B5,stroke:#FF8C00,stroke-width:2px,color:black
+    classDef optional fill:#E6E6FA,stroke:#8A2BE2,stroke-width:2px,color:darkblue,stroke-dasharray:5 5
+    classDef recommended fill:#90EE90,stroke:#2E7D2E,stroke-width:2px,color:darkgreen
 ```
 
 ## Development Workflow
@@ -47,58 +60,92 @@ If you want exploration results to survive `/clear` and feed directly into plann
 
 ```mermaid
 flowchart TD
-    subgraph Discovery["Optional: Discovery"]
-        EX(["/ww-explore\n clarify scope"]):::optional
-        GR(["/ww-grounded\n verify facts"]):::optional
+    START(["New feature or task"]):::start
+
+    subgraph DISCOVER["STEP 1: Understand (optional)"]
+        direction LR
+        EX(["/ww-explore\nClarify scope, compare options"]):::optional
+        GR(["/ww-grounded\nVerify facts, reject guesses"]):::optional
     end
 
-    subgraph Planning["Planning"]
-        PL(["/ww-plan\n fast | full"]):::cmd
-        IMP(["/ww-improve\n refine plan"]):::optional
+    subgraph PLAN["STEP 2: Plan the work"]
+        PL_DECIDE{"Task size?"}:::decision
+        PL_FAST(["/ww-plan fast\nNo branch, quick PLAN.md"]):::cmd
+        PL_FULL(["/ww-plan full\nGit branch + detailed plan"]):::cmd
+        PL_PAR(["/ww-plan full --parallel\nIsolated worktree"]):::cmd
+        PLAN_FILE["PLAN.md or\nplans/branch.md"]:::artifact
     end
 
-    subgraph BugFix["Bug Fixes"]
-        FIX(["/ww-fix\n diagnose + patch"]):::cmd
-        PATCHES[".ww-kit/patches/\n self-improvement"]:::artifact
+    subgraph REFINE["STEP 3: Refine (optional)"]
+        IMP(["/ww-improve\nFind missing tasks,\nfix dependencies"]):::optional
     end
 
-    subgraph Execution["Implementation"]
-        DO(["/ww-do\n execute tasks"]):::cmd
+    subgraph EXECUTE["STEP 4: Build it"]
+        DO(["/ww-do\nExecute tasks one by one\nwith commit checkpoints"]):::cmd
     end
 
-    subgraph Quality["Quality Gates"]
-        VER(["/ww-verify\n check completeness"]):::optional
-        SEC(["/wws-security\n security scan"]):::optional
-        REV(["/ww-review\n code review"]):::optional
+    subgraph BUGFIX["Bug? Fix + Learn"]
+        FIX(["/ww-fix\nDiagnose, fix, log patch"]):::error
+        PATCHES[".ww-kit/patches/\nSelf-improvement patches"]:::artifact
     end
 
-    subgraph Finalize["Finalize"]
-        COM(["/ww-commit\n conventional commit"]):::cmd
-        DECIDE{"More work?"}
-        EVOLVE(["/ww-evolve\n improve skills"]):::cmd
+    subgraph QUALITY["STEP 5: Quality gates (optional)"]
+        VER(["/ww-verify\nCheck plan vs code,\nbuild / test / lint"]):::optional
+        SEC(["/wws-security\nSecurity scan"]):::optional
+        REV(["/ww-review\nCode review"]):::optional
     end
 
-    EX -->|"scope clarified"| PL
-    GR -->|"facts verified"| PL
-    PL --> IMP --> DO
-    PL -->|"skip improve"| DO
+    subgraph SHIP["STEP 6: Ship it"]
+        COM(["/ww-commit\nConventional commit"]):::cmd
+        MORE{"More work?"}:::decision
+    end
 
+    subgraph LEARN["STEP 7: Improve (after all done)"]
+        EVOLVE(["/ww-evolve\nPatches become\nbetter skills"]):::cmd
+    end
+
+    START --> DISCOVER
+    START -->|"scope is clear"| PLAN
+
+    EX -->|"direction found"| PLAN
+    GR -->|"facts confirmed"| PLAN
+
+    PL_DECIDE -->|"small task"| PL_FAST
+    PL_DECIDE -->|"full feature"| PL_FULL
+    PL_DECIDE -->|"concurrent work"| PL_PAR
+
+    PL_FAST --> PLAN_FILE
+    PL_FULL --> PLAN_FILE
+    PL_PAR --> PLAN_FILE
+
+    PLAN_FILE --> REFINE
+    PLAN_FILE -->|"plan is good"| EXECUTE
+
+    IMP --> EXECUTE
+
+    DO -->|"error during task"| FIX
+    FIX -->|"fixed, resume"| DO
     FIX -->|"logs patch"| PATCHES
-    PATCHES -.->|"skill-context"| DO
+    PATCHES -.->|"skill-context feeds\nfuture runs"| DO
 
-    DO -->|"error"| FIX
-    DO --> VER
-    VER --> SEC & REV
+    DO -->|"all tasks done"| QUALITY
+
+    VER --> SEC
+    VER --> REV
     VER -->|"gaps found"| FIX
-    SEC & REV --> COM
 
-    COM --> DECIDE
-    DECIDE -->|"Yes"| PL
-    DECIDE -->|"Done"| EVOLVE
+    SEC --> COM
+    REV --> COM
 
-    classDef cmd fill:#4a90d9,stroke:#2c5f8a,color:#fff
-    classDef artifact fill:#f5f5dc,stroke:#8b8b6a,color:#333
-    classDef optional fill:#b0c4de,stroke:#6a7f99,color:#333,stroke-dasharray:5 5
+    MORE -->|"yes, next task"| PLAN
+    MORE -->|"all done"| LEARN
+
+    classDef start fill:#87CEEB,stroke:#4682B4,stroke-width:2px,color:darkblue
+    classDef cmd fill:#2C3E50,stroke:#34495E,stroke-width:2px,color:white
+    classDef optional fill:#E6E6FA,stroke:#8A2BE2,stroke-width:2px,color:darkblue,stroke-dasharray:5 5
+    classDef decision fill:#FFD700,stroke:#B8860B,stroke-width:2px,color:black
+    classDef artifact fill:#FFE4B5,stroke:#FF8C00,stroke-width:2px,color:black
+    classDef error fill:#FFB6C1,stroke:#DC143C,stroke-width:2px,color:black
 ```
 
 ## When to Use What?
